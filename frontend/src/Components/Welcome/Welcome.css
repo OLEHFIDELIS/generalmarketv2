@@ -1,0 +1,99 @@
+.welcome-container {
+  /* max-width: 1000px; */
+  margin: 10px auto;
+  text-align: center;
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+/* ===== Header ===== */
+.welcome-header {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-bottom: 40px;
+}
+
+.welcome-text h2 {
+  font-size: 26px;
+  color: #222;
+  margin-bottom: 8px;
+}
+
+.welcome-text p {
+  margin: 4px 0;
+  color: #555;
+  font-size: 16px;
+}
+
+.welcome-text .bold {
+  font-weight: 600;
+  color: #111;
+}
+
+/* ===== Actions Grid ===== */
+.welcome-actions {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 30px;
+}
+
+.action-card {
+  background: #fff;
+  border-radius: 12px;
+  padding: 25px 20px;
+  width: 150px;
+  height: 120px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.action-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.12);
+  border: 1px solid #ccc;
+  background-color: #fafafa;
+}
+
+.action-card .icon {
+  font-size: 30px;
+  margin-bottom: 12px;
+}
+
+.action-card p {
+  font-weight: 500;
+  color: #222;
+  font-size: 15px;
+}
+
+/* ===== Responsive ===== */
+@media (max-width: 768px) {
+  .welcome-text h2 {
+    font-size: 22px;
+  }
+  .welcome-actions {
+  gap: 30px;
+  }
+  .action-card {
+    width: 25%;
+    height: 120px;
+  }
+}
+
+@media (max-width: 480px) {
+  .action-card {
+    width: 25%;
+    height: 70px;
+  }
+
+  .action-card .icon {
+    font-size: 26px;
+  }
+}

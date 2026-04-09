@@ -1,0 +1,321 @@
+/* ===================== NAVBAR ===================== */
+.navbbar {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 30px;
+  width: 100%;
+  background-color: #fff;
+  box-sizing: border-box;
+}
+
+/* --------- LEFT (Logo) --------- */
+.navbbar .navright {
+  display: flex;
+  align-items: center;
+  width: 40%;
+  font-weight: 500;
+}
+
+.navbbar .navright .logo {
+  width: 200px;
+}
+
+.navbbar .navright .logo img {
+  width: 100%;
+  max-height: 80px;
+  object-fit: contain;
+}
+
+/* --------- RIGHT (Links) --------- */
+.navbbar .navleft {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-evenly;
+  width: 50%;
+  font-weight: 500;
+}
+
+.navbbar .navleft div {
+  display: flex;
+  align-items: center;
+  gap: 45px;
+}
+
+.navbbar .navleft a {
+  text-decoration: none;
+  color: #363636;
+  font-weight: 400;
+  transition: color 0.3s;
+}
+
+/* .navbbar .navleft a:hover {
+  color: #523fdb;
+} */
+
+/* --------- CART COUNTER --------- */
+.navbbar .navleft .nav-cart-count {
+  width: 22px;
+  height: 22px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: -35px;
+  margin-left: -55px;
+  border-radius: 50%;
+  border: none;
+  font-size: 14px;
+  background: red;
+  color: white;
+}
+
+/* --------- PUBLISH BUTTON --------- */
+.navbbar .navleft .publish {
+  min-width: 100px;
+  height: 30px;
+  text-align: center;
+  padding: 2px 12px;
+  padding-top: 10px;
+  border-radius: 6px;
+  background-color: #523fdb;
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+
+/* --------- MOBILE NAVBAR ICONS --------- */
+.navbbar .nav-left {
+  display: none;
+}
+
+/* ===================== TABLET RESPONSIVE ===================== */
+@media (max-width: 1024px) {
+  .navbbar {
+    padding: 0 10px;
+  }
+
+  .navbbar .navright {
+    width: 50%;
+    font-size: 14px;
+  }
+
+  .navbbar .navleft {
+    font-size: 14px;
+    padding: 0;
+  }
+
+  .navbbar .navleft div img {
+    width: 26px;
+  }
+
+  .navbbar .navleft .nav-cart-count {
+    width: 20px;
+    height: 20px;
+    font-size: 10px;
+  }
+
+  .navbbar .navleft .publish {
+    width: 86px;
+    height: 25px;
+    font-size: 14px;
+    line-height: 18px;
+    padding-bottom: 1px;
+  }
+}
+
+/* ===================== MOBILE RESPONSIVE ===================== */
+@media (max-width: 767px) {
+  .navbbar {
+    justify-content: space-between;
+  }
+
+  .navbbar .navright .logo img {
+    width: 150px;
+  }
+
+  .navbbar .navright .companies {
+    display: none;
+  }
+
+  .navbbar .navleft {
+    display: none;
+  }
+
+  .navbbar .nav-left {
+    width: 150px;
+    display: flex;
+    padding-top: 20px;
+    margin-right: 5px;
+    justify-content: space-evenly;
+    color: #5c5c5c;
+  }
+
+  .navbbar .nav-left svg {
+    width: 23px;
+    color: #5c5c5c;
+  }
+
+  .navbbar .nav-left .cart-items {
+    display: flex;
+    align-items: center;
+    gap: 30px;
+  }
+
+  .navbbar .nav-left .cart-items img{
+       width: 26px;
+  }
+
+  .navbbar .nav-left .nav-cart-count {
+    max-width: 19px;
+    height: 19px;
+    font-size: 10px;
+  }
+
+  /* Overlay background */
+.overlay {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  z-index: 1000;
+  animation: fadeIn 0.3s ease;
+}
+
+
+/* Full-width slide-up menu */
+.menu-container {
+  background-color: #fff;
+  width: 100%; /* ✅ full width */
+  border-top-left-radius: 16px;
+  border-top-right-radius: 16px;
+  padding: 20px;
+  box-shadow: 0 -4px 10px rgba(0, 0, 0, 0.1);
+  animation: slideUp 0.3s ease;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+/* Header */
+.menu-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #eaeaea;
+  padding-bottom: 10px;
+  margin-bottom: 10px;
+}
+
+.menu-header h3 {
+  margin: 0;
+  font-size: 18px;
+  color: #333;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+  color: #666;
+  transition: color 0.2s;
+}
+
+.close-btn:hover {
+  color: #000;
+}
+
+/* -----------------------------
+   MENU LIST
+------------------------------ */
+.menu-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.menu-list li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 0;
+  font-size: 16px;
+  color: #444;
+  cursor: pointer;
+  transition: color 0.2s;
+  border-bottom: 1px solid #f2f2f2;
+}
+
+.menu-list li:hover {
+  color: #007bff;
+}
+
+.menu-list .divider {
+  border: none;
+  height: 1px;
+  background: #e5e5e5;
+  margin: 10px 0;
+}
+
+/* Floating open button */
+.menu-btn {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background: #000;
+  color: #fff;
+  padding: 12px 20px;
+  border: none;
+  border-radius: 30px;
+  cursor: pointer;
+  font-weight: 500;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+  transition: background 0.3s;
+  z-index: 1100;
+}
+
+.menu-btn:hover {
+  background: #333;
+}
+
+/* Animations */
+@keyframes slideUp {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Responsive for small screens */
+@media (max-width: 768px) {
+  .menu-container {
+    width: 90%;
+    border-radius: 16px 16px 0 0;
+  }
+
+  .menu-btn {
+    bottom: 15px;
+    right: 15px;
+  }
+}
+}
+
+/* ===================== BOTTOM MENU (Mobile) ===================== */
+

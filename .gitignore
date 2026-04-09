@@ -1,0 +1,30 @@
+# Dependencies
+node_modules/
+*/node_modules/
+
+# Build outputs
+frontend/build/
+admin/dist/
+
+# Environment files - NEVER commit these
+.env
+*/.env
+frontend/.env.production
+admin/.env.production
+
+# macOS
+.DS_Store
+**/.DS_Store
+__MACOSX/
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+
+# Editor
+.vscode/
+.idea/
+
+# Uploads (use Cloudinary instead)
+backend/uploads/
