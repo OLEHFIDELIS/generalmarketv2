@@ -1,105 +1,96 @@
-# GeneralMarket - Hostinger Deployment Guide
+# GeneralMarket — Unified Hostinger Deployment
 
-## Project Structure
+## Structure
+Everything is in ONE folder. No subdomains needed.
+
 ```
 generalmarket/
-├── admin/          # React admin panel (Vite) → admin.yourdomain.com
-├── backend/        # Node/Express API       → api.yourdomain.com
-├── frontend/       # React frontend (CRA)   → yourdomain.com
-└── package.json    # Root scripts
+├── server.js          ← Express backend (Node.js entry point)
+├── cloudinary.js      ← Cloudinary config
+├── schema/            ← MongoDB models
+├── src/               ← React source code
+├── public/            ← React public files
+├── package.json       ← All dependencies
+└── .env               ← Environment variables (fill in your values)
 ```
 
 ---
 
-## Before Deploying — Replace "yourdomain.com"
+## Step 1 — Fill in your .env values
 
-Search and replace `yourdomain.com` with your real domain in:
-- `frontend/package.json` → `"homepage"` field
-- `frontend/.env.production` → `REACT_APP_API_URL`
-- `admin/.env.production` → `VITE_API_URL`
+Open `.env` and replace the placeholder values:
 
----
-
-## Step 1 — Deploy Backend (api.yourdomain.com)
-
-1. hPanel → Websites → Add Website → Node.js Apps
-2. Connect GitHub repo
-3. Set Root directory: `backend`
-4. Build command: `npm install`
-5. Start command: `node index.js`
-6. Node version: 18.x or 20.x
-7. Assign subdomain: `api.yourdomain.com`
-
-### Environment Variables to add in hPanel:
 ```
 NODE_ENV=production
 PORT=4000
 DB_NAME=olehfidelis
-DB_PASWORD=your_real_mongodb_password
+DB_PASWORD=YOUR_REAL_MONGODB_PASSWORD
 CLOUDINARY_NAME=dnptgaida
 CLOUDINARY_API_KEY=939816573661889
-CLOUDINARY_API_SECRET=your_real_cloudinary_secret
-JWT_SECRET=generate_a_long_random_string_here
-CLIENT_URL=https://yourdomain.com
-ADMIN_URL=https://admin.yourdomain.com
+CLOUDINARY_API_SECRET=YOUR_REAL_CLOUDINARY_SECRET
+JWT_SECRET=any_long_random_string_you_choose
 ```
 
 ---
 
-## Step 2 — Deploy Frontend (yourdomain.com)
+## Step 2 — Build React locally before deploying
 
-1. Build locally:
-   ```bash
-   cd frontend
-   npm install
-   npm run build
-   ```
-2. hPanel → File Manager → public_html
-3. Upload ALL contents of `frontend/build/` into `public_html`
-4. Upload `frontend/.htaccess` into `public_html`
+Run this on your computer:
 
----
+```bash
+npm install
+npm run build
+```
 
-## Step 3 — Deploy Admin (admin.yourdomain.com)
-
-1. Build locally:
-   ```bash
-   cd admin
-   npm install
-   npm run build
-   ```
-2. hPanel → Domains → Subdomains → create `admin.yourdomain.com`
-3. Go to the admin subdomain folder in File Manager
-4. Upload ALL contents of `admin/dist/` into that folder
-5. Upload `admin/.htaccess` into that folder
+This creates a `build/` folder. Push everything (including `build/`) to GitHub.
 
 ---
 
-## Step 4 — Enable SSL
+## Step 3 — Deploy on Hostinger hPanel
 
-hPanel → SSL → Enable Let's Encrypt for:
-- yourdomain.com
-- admin.yourdomain.com
-- api.yourdomain.com
+1. hPanel → Websites → Add Website → **Node.js App**
+2. Connect your GitHub repo
+3. Set:
+   - **Root directory:** `/` (leave empty / root)
+   - **Build command:** `npm install`
+   - **Start command:** `node server.js`
+   - **Node version:** 18.x or 20.x
+4. Click Deploy
+
+---
+
+## Step 4 — Add Environment Variables in hPanel
+
+After deploying, go to your app settings → **Environment Variables** and add all values from your `.env` file.
+
+Then **Restart** the app.
 
 ---
 
 ## Step 5 — MongoDB Atlas
 
-Make sure your MongoDB Atlas cluster allows connections from Hostinger:
-- Atlas → Network Access → Add IP Address → `0.0.0.0/0` (allow all)
-  OR add Hostinger's specific server IP for better security.
+Allow Hostinger to connect to your database:
+- MongoDB Atlas → Network Access → Add IP → **0.0.0.0/0** (Allow from anywhere)
 
 ---
 
-## Local Development
+## URLs after deployment
+
+| Page | URL |
+|---|---|
+| Frontend shop | yourdomain.com |
+| Admin panel | yourdomain.com/#/admin |
+| API test | yourdomain.com/api/allproduct |
+
+> Access the admin at: `yourdomain.com/#/admin`
+
+---
+
+## Local development
 
 ```bash
-# Install all dependencies
-npm run install:all
-
-# Run each app
-npm run dev:backend    # http://localhost:4000
-npm run dev:frontend   # http://localhost:3000
-npm run dev:admin      # http://localhost:5173
+npm install
+npm run dev      # starts backend on port 4000
+# In separate terminal:
+npm start        # starts React on port 3000
 ```
