@@ -1,46 +1,27 @@
 import React from "react";
 import "./Category.css";
 import { useNavigate } from "react-router-dom";
-import {
-  FaTv,
-  FaCar,
-  FaTshirt,
-  FaBriefcase,
-  FaUserTie,
-  FaIndustry,
-  FaBoxes,
-  FaBuilding,
-  FaCouch,
-  FaGamepad,
-  FaLeaf,
-  FaTractor,
-  FaBaby,
-  FaVenusMars,
-  FaPhone,
-  FaFone
-} from "react-icons/fa";
+
+const categories = [
+  { icon: "📱", label: "Electronics", color: "#3b82f6" },
+  { icon: "🚗", label: "Vehicles", color: "#f97316" },
+  { icon: "🏠", label: "Property", color: "#10b981" },
+  { icon: "👗", label: "Fashion & Beauty", color: "#ec4899" },
+  { icon: "💼", label: "Services", color: "#8b5cf6" },
+  { icon: "👔", label: "Jobs", color: "#06b6d4" },
+  { icon: "🎮", label: "Hobbies & Entertainment", color: "#f59e0b" },
+  { icon: "🛋️", label: "Home & Furniture", color: "#84cc16" },
+  { icon: "🌿", label: "Garden & Outdoor", color: "#22c55e" },
+  { icon: "🚜", label: "Agriculture & Food", color: "#a3e635" },
+  { icon: "👶", label: "Baby & Kids", color: "#fb923c" },
+  { icon: "📦", label: "Misc & Others", color: "#94a3b8" },
+  { icon: "🔌", label: "Gadgets & Accessories", color: "#818cf8" },
+  { icon: "🔞", label: "Adult", color: "#f43f5e" },
+];
 
 const BrowseCategories = () => {
   const navigate = useNavigate();
 
-  const categories = [
-    { icon: <FaTv />, label: "Electronics" },
-    { icon: <FaCar />, label: "Vehicles" },
-    { icon: <FaTshirt />, label: "Fashion & Beauty" },
-    { icon: <FaBriefcase />, label: "Services" },
-    { icon: <FaUserTie />, label: "Jobs" },
-    { icon: <FaPhone />, label: "gadgets & accessories" },
-    { icon: <FaBoxes />, label: "Misc & Others" },
-    { icon: <FaBuilding />, label: "Property" },
-    { icon: <FaCouch />, label: "Home & Furniture" },
-    { icon: <FaGamepad />, label: "Hobbies & Entertainment" },
-    { icon: <FaLeaf />, label: "Garden & Outdoor" },
-    { icon: <FaTractor />, label: "Agriculture & Food" },
-    { icon: <FaBaby />, label: "Baby & Kids" },
-    { icon: <FaVenusMars />, label: "Adult" },
-  ];
-
-  // Convert label to route-friendly path (lowercase + hyphens)
   const handleNavigate = (label) => {
     const route = `/category/${label.toLowerCase().replace(/ & /g, "-").replace(/\s+/g, "-")}`;
     navigate(route);
@@ -48,8 +29,10 @@ const BrowseCategories = () => {
 
   return (
     <div className="browse-container">
-      <h2>Browse categories</h2>
-      <p className="subtitle">Select a category you are interested in</p>
+      <div className="browse-header">
+        <h2>Browse Categories</h2>
+        <p className="subtitle">Find exactly what you're looking for</p>
+      </div>
 
       <div className="categories-grid">
         {categories.map((cat, index) => (
@@ -57,16 +40,15 @@ const BrowseCategories = () => {
             key={index}
             className="category-card"
             onClick={() => handleNavigate(cat.label)}
+            style={{ "--cat-color": cat.color }}
           >
-            <div className="icon">{cat.icon}</div>
+            <div className="cat-icon-wrap">
+              <span className="cat-emoji">{cat.icon}</span>
+            </div>
             <p>{cat.label}</p>
           </div>
         ))}
       </div>
-
-      <button className="browse-btn" onClick={() => navigate("/categories")}>
-        Search in all categories
-      </button>
     </div>
   );
 };

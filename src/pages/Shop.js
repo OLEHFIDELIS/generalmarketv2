@@ -1,25 +1,22 @@
-import React from "react"
-import Hero from "../components/Hero"
-import Popular from "../components/Popular"
-import Offers from "../components/Offers"
-import NewCollections from "../components/NewCollections"
-import NewsLetter from "../components/NewsLetter"
-import Category from "../components/Categories"
-import Footer from "../components/Footer"
-import Search from "../components/Search"
-import Welcome from "../components/Welcome"
+import React from "react";
+import Hero from "../components/Hero";
+import Welcome from "../components/Welcome";
+import Popular from "../components/Popular";
+import BrowseCategories from "../components/Categories";
+import NewCollections from "../components/NewCollections";
+import NewsLetter from "../components/NewsLetter";
 
-const Shop = ()=> {
-    return(
-        <div>
-           <Hero/>
-           <Welcome/>
-           <Popular/>
-           <Category/>
-           <NewCollections/>
-           <NewsLetter/>
-        </div>
-    )
-}
+const Shop = () => {
+  return (
+    <div>
+      <Hero />
+      <Welcome />
+      <Popular />
+      <BrowseCategories />
+      <NewCollections />
+      <NewsLetter />
+    </div>
+  );
+};
 
-export default Shop
+export default Shop;
