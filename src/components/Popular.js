@@ -19,7 +19,7 @@ const Popular = () => {
           <h2>Popular Listings</h2>
           <p>The most viewed items right now</p>
         </div>
-        <a href="#/category/electronics" className="section-link">View all →</a>
+        <a href="#/all" className="section-link">View all →</a>
       </div>
       <div className="popular-item">
         {popularProducts.map((item, i) => (

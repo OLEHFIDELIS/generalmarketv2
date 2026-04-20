@@ -19,7 +19,7 @@ const NewCollections = () => {
           <h2>Newest Listings</h2>
           <p>Just added — be the first to grab them</p>
         </div>
-        <a href="#/category/electronics" className="section-link">View all →</a>
+        <a href="#/all" className="section-link">View all →</a>
       </div>
       <div className="collections">
         {newCollection.map((item, i) => (

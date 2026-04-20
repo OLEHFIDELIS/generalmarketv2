@@ -7,34 +7,27 @@ const RelatedProduct = ({ productId }) => {
 
   useEffect(() => {
     if (!productId) return;
-
     fetch(`/api/related-products/${productId}`)
-      .then(res => res.json())
-      .then(data => setRelated(data))
-      .catch(err => console.log(err));
+      .then((res) => res.json())
+      .then((data) => setRelated(data))
+      .catch((err) => console.log(err));
   }, [productId]);
 
-  return (
-    <div className="relatedproducts">
-      <h1>Related Products</h1>
-      <hr />
+  if (related.length === 0) return null;
 
-      <div className="relatedproducts-item">
-        {related.length > 0 ? (
-          related.map((item) => (
-            <Item
-              key={item._id}
-              id={item.id}
-              name={item.title}
-              images={item.images}
-              new_price={item.price}
-              old_price={item.old_price}
-              location={item.location}
-            />
-          ))
-        ) : (
-          <p>No related products found.</p>
-        )}
+  return (
+    <div className="related-wrap">
+      <div className="related-grid">
+        {related.map((item) => (
+          <Item
+            key={item._id}
+            id={item.id}
+            name={item.title}
+            images={item.images}
+            new_price={item.price}
+            address={item.address}
+          />
+        ))}
       </div>
     </div>
   );
