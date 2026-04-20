@@ -446,3 +446,103 @@
 
 @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+/* ── Load more ── */
+.al-load-more-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  margin-top: 40px;
+  padding: 32px 20px;
+  border-top: 1px solid #e2e8f0;
+}
+.al-load-progress {
+  width: 100%;
+  max-width: 320px;
+  height: 4px;
+  background: #e2e8f0;
+  border-radius: 999px;
+  overflow: hidden;
+}
+.al-load-bar {
+  height: 100%;
+  background: linear-gradient(90deg, #f97316, #ea580c);
+  border-radius: 999px;
+  transition: width 0.4s ease;
+}
+.al-load-label {
+  font-size: 13px;
+  color: #64748b;
+  font-family: 'DM Sans', sans-serif;
+}
+.al-load-label strong { color: #1e293b; }
+.al-load-more-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: white;
+  border: 2px solid #f97316;
+  color: #f97316;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  padding: 14px 36px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.al-load-more-btn:hover {
+  background: #f97316;
+  color: white;
+}
+.lm-icon { font-size: 12px; }
+
+.al-end-msg {
+  text-align: center;
+  margin-top: 40px;
+  padding: 20px;
+  font-size: 14px;
+  color: #94a3b8;
+  font-family: 'DM Sans', sans-serif;
+  border-top: 1px solid #e2e8f0;
+}
+.al-end-msg strong { color: #475569; }
+
+/* ── Clear input btn ── */
+.al-clear-input {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #94a3b8;
+  display: flex;
+  align-items: center;
+  font-size: 14px;
+  padding: 4px;
+  transition: color 0.2s;
+  flex-shrink: 0;
+}
+.al-clear-input:hover { color: #475569; }
+
+/* ── Clear all chip btn ── */
+.al-chip-clearall {
+  background: none;
+  border: 1px solid #e2e8f0;
+  color: #64748b;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 12px;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.al-chip-clearall:hover { border-color: #f97316; color: #f97316; }
+
+/* ── Fix checkbox tick ── */
+.fp-tick {
+  margin-left: auto;
+  color: #f97316;
+  font-size: 12px;
+  font-weight: 700;
+}
