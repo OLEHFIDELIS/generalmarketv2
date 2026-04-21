@@ -40,6 +40,9 @@ const NewNav = () => {
           <img src={logo} alt="GeneralMarket" />
         </Link>
 
+        {/* ── Spacer ── */}
+        <div className="navbar-spacer" />
+
         {/* ── Desktop search bar ── */}
         <form className="navbar-search" onSubmit={handleSearch}>
           <FaSearch className="ns-icon" />

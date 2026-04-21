@@ -9,13 +9,12 @@
   z-index: 999;
   display: flex;
   align-items: center;
-  gap: 20px;
-  padding: 0 32px;
   height: 90px;
   background: #ffffff;
   border-bottom: 1px solid #e2e8f0;
   box-shadow: 0 1px 12px rgba(0,0,0,0.06);
   font-family: 'DM Sans', sans-serif;
+  padding: 0 48px;
 }
 
 /* ── Logo ── */
@@ -23,16 +22,19 @@
   flex-shrink: 0;
   display: flex;
   align-items: center;
+  text-decoration: none;
 }
 .navbar-logo img {
-  height: 90px;
+  height: 68px;
   width: auto;
   object-fit: contain;
 }
 
+/* ── Spacer pushes search + actions to the right ── */
+.navbar-spacer { flex: 1; }
+
 /* ── Desktop Search ── */
 .navbar-search {
-  flex: 1;
   display: flex;
   align-items: center;
   background: #f1f5f9;
@@ -41,7 +43,8 @@
   padding: 0 6px 0 14px;
   gap: 8px;
   transition: border-color 0.2s, box-shadow 0.2s;
-  max-width: 560px;
+  width: 380px;
+  margin-right: 24px;
 }
 .navbar-search:focus-within {
   border-color: #f97316;
@@ -79,7 +82,7 @@
 .navbar-actions {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 20px;
   flex-shrink: 0;
 }
 .nav-link {
@@ -232,7 +235,7 @@
   padding: 20px 20px 16px;
   border-bottom: 1px solid #f1f5f9;
 }
-.mob-logo { height: 40px; width: auto; object-fit: contain; }
+.mob-logo { height: 44px; width: auto; object-fit: contain; }
 .mob-close {
   background: #f1f5f9;
   border: none;
@@ -304,11 +307,12 @@
    RESPONSIVE
 ═══════════════════════════════════════ */
 @media (max-width: 900px) {
-  .navbar { padding: 0 16px; gap: 12px; }
+  .navbar { padding: 0 16px; }
+  .navbar-spacer { display: none; }
   .navbar-search { display: none; }
   .navbar-actions { display: none; }
   .navbar-mobile-icons { display: flex; }
-  .navbar-logo img { height: 72px; }
+  .navbar-logo img { height: 56px; }
 }
 
 @keyframes slideUp {
@@ -319,4 +323,3 @@
   from { opacity: 0; }
   to { opacity: 1; }
 }
-
