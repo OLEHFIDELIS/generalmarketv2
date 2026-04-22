@@ -108,17 +108,54 @@ app.get("/api/allproduct", async (req, res) => {
   res.send(products);
 });
 
-// New collection
+// Newest listings — rotates every 24 hours (picks 8 from the newest 20)
 app.get("/api/newcollection", async (req, res) => {
-  const product = await Product.find({});
-  const newcollection = product.slice(1).slice(-8);
-  res.send(newcollection);
+  try {
+    // Get the 20 most recently added products
+    const recent = await Product.find({}).sort({ createdAt: -1 }).limit(20);
+    if (recent.length === 0) return res.send([]);
+
+    // Daily seed shuffle within those 20
+    const today = new Date();
+    const seed  = today.getFullYear() * 10000 + (today.getMonth() + 1) * 100 + today.getDate() + 7; // +7 offset so it differs from popular
+
+    const arr = [...recent];
+    let s = seed;
+    for (let i = arr.length - 1; i > 0; i--) {
+      s = (s * 1664525 + 1013904223) & 0xffffffff;
+      const j = Math.abs(s) % (i + 1);
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+
+    res.send(arr.slice(0, 8));
+  } catch (err) {
+    res.status(500).json({ error: "Failed to fetch new collection" });
+  }
 });
 
-// Popular products
+// Popular products — rotates every 24 hours using daily seed shuffle
 app.get("/api/popular", async (req, res) => {
-  const popularProducts = await Product.find({}).limit(8);
-  res.send(popularProducts);
+  try {
+    const allProducts = await Product.find({});
+    if (allProducts.length === 0) return res.send([]);
+
+    // Daily seed: changes at midnight every day
+    const today = new Date();
+    const seed  = today.getFullYear() * 10000 + (today.getMonth() + 1) * 100 + today.getDate();
+
+    // Seeded Fisher-Yates shuffle
+    const arr = [...allProducts];
+    let s = seed;
+    for (let i = arr.length - 1; i > 0; i--) {
+      s = (s * 1664525 + 1013904223) & 0xffffffff;
+      const j = Math.abs(s) % (i + 1);
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+
+    res.send(arr.slice(0, 8));
+  } catch (err) {
+    res.status(500).json({ error: "Failed to fetch popular products" });
+  }
 });
 
 // Signup

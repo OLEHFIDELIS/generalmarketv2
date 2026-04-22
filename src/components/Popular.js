@@ -7,10 +7,11 @@ const Popular = () => {
 
   useEffect(() => {
     fetch("/api/popular")
-      .then((response) => response.json())
+      .then((res) => res.json())
       .then((data) => setPopularProducts(data))
       .catch((err) => console.error("Error fetching popular:", err));
   }, []);
+
 
   return (
     <div className="popular">

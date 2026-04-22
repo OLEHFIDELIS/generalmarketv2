@@ -1,75 +1,130 @@
 import React from "react";
 import "./Footer.css";
-import { FaWhatsapp, FaFacebookF, FaPinterestP, FaInstagram, FaTwitter } from "react-icons/fa";
+import logo from "../assets/gmarketlogo.png";
+import {
+  FaWhatsapp, FaFacebookF, FaInstagram, FaTwitter,
+  FaMapMarkerAlt, FaPhoneAlt, FaEnvelope, FaArrowRight
+} from "react-icons/fa";
+
+const categories = [
+  "Electronics","Vehicles","Property","Fashion & Beauty",
+  "Services","Jobs","Home & Furniture","Gadgets & Accessories"
+];
 
 const Footer = () => {
+  const year = new Date().getFullYear();
+
   return (
-    <footer className="faji-footer">
-      <div className="faji-top">
-        <div className="faji-company">
-          <div className="faji-logo">Generalmarket<span>.ng</span></div>
-          <h3>Generalmarket</h3>
-          <p className="faji-contact">
-            Phone: <a href="tel:07025187910">08141846896</a><br />
-            {/* Phone: <a href="tel:07025187910">09034808095</a><br /> */}
-            Email: <a href="mailto:info@faji.ng">generalmarket@gmail.com</a><br />
-            Along ESBS Bus Stop, Enugu
-          </p>
-          <p className="faji-desc">
-            General Markert  is Nigeria’s trusted online classifieds platform, connecting buyers and sellers across the country.
-            From jobs and services to vehicles, electronics, and real estate, General-Market makes it easy to find great deals 
-            and grow your business. <br />Safe. Simple. Local.
-          </p>
-          <button className="dark-mode-btn">☾ Switch to dark mode</button>
-        </div>
-        <div  className="faji-links">
-          <div className="faji-social">
-          <h4>Social media</h4>
-          <ul>
-            <li><FaWhatsapp className="icon" /> Whatsapp</li>
-            <li><FaFacebookF className="icon" /> Facebook</li>
-            <li><FaPinterestP className="icon" /> Pinterest</li>
-            <li><FaInstagram className="icon" /> Instagram</li>
-            <li><FaTwitter className="icon" /> Twitter</li>
-          </ul>
-        </div>
+    <footer className="footer">
 
-        <div className="faji-info">
-          <h4>Information</h4>
-          <ul>
-            <li>About Us</li>
-            <li>How It Works</li>
-            <li>Safety Tips</li>
-            <li>FAQ</li>
-            <li>Terms of Service</li>
-            <li>Privacy Policy</li>
-            <li>Refund Policy</li>
-          </ul>
-        </div>
-      </div>
-      </div>
-
-      <div className="faji-middle">
-        <p>
-          Welcome to Generalmarke.com – your trusted platform for buying, selling, exchanging and trading across Nigeria. 
-          Post free ads and reach thousands of buyers instantly.
-        </p>
-      </div>
-
-      <div className="faji-bottom">
-        <div className="faji-line"></div>
-        <div className="faji-bottom-links">
-          <div className="left">
-            <a href="#">Contact us</a> &nbsp;|&nbsp;
-            <a href="#">General Market</a> &nbsp;|&nbsp;
-            <a href="">Android App</a>
+      {/* ── CTA strip ── */}
+      <div className="footer-cta">
+        <div className="footer-cta-inner">
+          <div className="footer-cta-text">
+            <h3>Ready to buy or sell?</h3>
+            <p>Post your free ad today and reach thousands of buyers across Nigeria.</p>
           </div>
-          <div className="right">
-            Company Registration: RC 8626841<br />
-            Copyright © 2025 GeneralMarket Digital Services Limited. All rights reserved.
+          <a
+            href="https://wa.me/+2348141846896"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="footer-cta-btn"
+          >
+            Post a Free Ad <FaArrowRight />
+          </a>
+        </div>
+      </div>
+
+      {/* ── Main footer ── */}
+      <div className="footer-main">
+        <div className="footer-inner">
+
+          {/* Brand column */}
+          <div className="footer-col footer-brand">
+            <img src={logo} alt="GeneralMarket" className="footer-logo" />
+            <p className="footer-desc">
+              Nigeria's trusted online classifieds platform connecting buyers and sellers
+              across all 36 states. Safe. Simple. Local.
+            </p>
+            <div className="footer-contact">
+              <div className="fc-item">
+                <FaPhoneAlt className="fc-icon" />
+                <a href="tel:+2348141846896">+234 814 184 6896</a>
+              </div>
+              <div className="fc-item">
+                <FaEnvelope className="fc-icon" />
+                <a href="mailto:generalmarket@gmail.com">generalmarket@gmail.com</a>
+              </div>
+              <div className="fc-item">
+                <FaMapMarkerAlt className="fc-icon" />
+                <span>Along ESBS Bus Stop, Enugu, Nigeria</span>
+              </div>
+            </div>
+            <div className="footer-social">
+              <a href="https://wa.me/+2348141846896" target="_blank" rel="noopener noreferrer" className="social-btn whatsapp"><FaWhatsapp /></a>
+              <a href="#" className="social-btn facebook"><FaFacebookF /></a>
+              <a href="#" className="social-btn instagram"><FaInstagram /></a>
+              <a href="#" className="social-btn twitter"><FaTwitter /></a>
+            </div>
+          </div>
+
+          {/* Categories column */}
+          <div className="footer-col">
+            <h4 className="footer-col-title">Categories</h4>
+            <ul className="footer-links">
+              {categories.map(c => (
+                <li key={c}>
+                  <a href={`/#/category/${c.toLowerCase().replace(/ & /g, "-").replace(/\s+/g, "-")}`}>
+                    {c}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Quick links column */}
+          <div className="footer-col">
+            <h4 className="footer-col-title">Quick Links</h4>
+            <ul className="footer-links">
+              <li><a href="/#/">Home</a></li>
+              <li><a href="/#/all">All Listings</a></li>
+              <li><a href="/#/login">Login / Register</a></li>
+              <li><a href="/#/cart">My Cart</a></li>
+              <li><a href="https://wa.me/+2348141846896" target="_blank" rel="noopener noreferrer">Post a Free Ad</a></li>
+            </ul>
+          </div>
+
+          {/* Info column */}
+          <div className="footer-col">
+            <h4 className="footer-col-title">Information</h4>
+            <ul className="footer-links">
+              <li><a href="#">About Us</a></li>
+              <li><a href="#">How It Works</a></li>
+              <li><a href="#">Safety Tips</a></li>
+              <li><a href="#">FAQ</a></li>
+              <li><a href="#">Terms of Service</a></li>
+              <li><a href="#">Privacy Policy</a></li>
+              <li><a href="#">Contact Us</a></li>
+            </ul>
+          </div>
+
+        </div>
+      </div>
+
+      {/* ── Bottom bar ── */}
+      <div className="footer-bottom">
+        <div className="footer-bottom-inner">
+          <p className="footer-copy">
+            © {year} GeneralMarket Digital Services Limited. All rights reserved. · RC 8626841
+          </p>
+          <div className="footer-bottom-links">
+            <a href="#">Terms</a>
+            <a href="#">Privacy</a>
+            <a href="#">Cookies</a>
           </div>
         </div>
       </div>
+
     </footer>
   );
 };
