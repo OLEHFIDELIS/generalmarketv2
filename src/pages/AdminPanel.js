@@ -46,10 +46,10 @@ body{font-family:'DM Sans',sans-serif;background:#f1f5f9;color:#1e293b;}
 .ap-page-title{font-family:'Syne',sans-serif;font-size:1.6rem;font-weight:800;color:#0f172a;margin-bottom:24px;}
 
 /* ── Dashboard stats ── */
-.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:28px;}
-.stat-card{background:white;border-radius:14px;padding:20px 22px;border:1.5px solid #e2e8f0;display:flex;flex-direction:column;gap:8px;}
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:28px;min-width:0;}
+.stat-card{background:white;border-radius:14px;padding:20px 22px;border:1.5px solid #e2e8f0;display:flex;flex-direction:column;gap:8px;min-width:0;overflow:hidden;}
 .stat-card .sc-label{font-size:12px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:0.5px;}
-.stat-card .sc-value{font-family:'Syne',sans-serif;font-size:1.8rem;font-weight:800;color:#0f172a;}
+.stat-card .sc-value{font-family:'Syne',sans-serif;font-size:clamp(1rem,3vw,1.8rem);font-weight:800;color:#0f172a;word-break:break-all;overflow-wrap:anywhere;line-height:1.2;}
 .stat-card .sc-sub{font-size:12px;color:#64748b;}
 .stat-card .sc-icon{font-size:28px;margin-bottom:4px;}
 
@@ -85,6 +85,33 @@ body{font-family:'DM Sans',sans-serif;background:#f1f5f9;color:#1e293b;}
 .lp-del-btn{background:none;border:1.5px solid #fee2e2;color:#ef4444;border-radius:6px;padding:5px 10px;cursor:pointer;font-size:12px;font-weight:600;transition:all 0.2s;}
 .lp-del-btn:hover{background:#fee2e2;}
 .lp-empty{text-align:center;padding:48px;color:#94a3b8;}
+
+/* ── Load more ── */
+.lp-load-wrap{display:flex;flex-direction:column;align-items:center;gap:10px;padding:24px;border-top:1px solid #f1f5f9;}
+.lp-load-progress{width:100%;max-width:280px;height:4px;background:#e2e8f0;border-radius:999px;overflow:hidden;}
+.lp-load-bar{height:100%;background:#f97316;border-radius:999px;transition:width 0.3s;}
+.lp-load-label{font-size:12px;color:#94a3b8;}
+.lp-load-label strong{color:#475569;}
+.lp-load-btn{background:white;border:2px solid #f97316;color:#f97316;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:700;padding:10px 28px;border-radius:8px;cursor:pointer;transition:all 0.2s;}
+.lp-load-btn:hover{background:#f97316;color:white;}
+
+/* ── Mobile card layout (replaces table on small screens) ── */
+.lp-card-list{display:none;flex-direction:column;gap:10px;padding:16px;}
+.lp-card{display:flex;gap:12px;background:white;border-radius:12px;border:1.5px solid #e2e8f0;padding:12px;align-items:flex-start;}
+.lp-card-img{width:70px;height:60px;object-fit:cover;border-radius:8px;flex-shrink:0;background:#f1f5f9;}
+.lp-card-body{flex:1;min-width:0;}
+.lp-card-title{font-size:14px;font-weight:700;color:#1e293b;margin-bottom:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.lp-card-meta{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-bottom:6px;}
+.lp-card-price{font-size:14px;font-weight:800;color:#f97316;}
+.lp-card-cat{font-size:11px;color:#64748b;background:#f1f5f9;padding:2px 8px;border-radius:999px;text-transform:capitalize;}
+.lp-card-actions{display:flex;align-items:center;gap:8px;margin-top:4px;}
+
+@media(max-width:640px){
+  .lp-table-wrap{display:none;}
+  .lp-card-list{display:flex;}
+  .lp-toolbar{padding:12px 16px;gap:8px;}
+  .lp-search{min-width:0;}
+}
 
 /* ── Add Listing Form ── */
 .al-form-wrap{max-width:800px;}
@@ -123,16 +150,70 @@ textarea.al-input{resize:vertical;min-height:100px;}
 
 @media(max-width:900px){
   .ap-sidebar{display:none;}
-  .ap-main{padding:20px 16px;}
+  .ap-main{padding:20px 16px 90px;}
   .stats-grid{grid-template-columns:repeat(2,1fr);}
   .cat-breakdown{grid-template-columns:repeat(2,1fr);}
   .al-grid-2{grid-template-columns:1fr;}
+  .ap-bottom-nav{display:flex;}
 }
 @media(max-width:540px){
   .stats-grid{grid-template-columns:1fr 1fr;}
-  .lp-table th:nth-child(4),.lp-table td:nth-child(4),
-  .lp-table th:nth-child(5),.lp-table td:nth-child(5){display:none;}
+  .lp-count{display:none;}
 }
+
+/* ── Hamburger button (mobile only) ── */
+.ap-hamburger{display:none;background:none;border:none;cursor:pointer;padding:6px;border-radius:8px;color:#94a3b8;transition:color 0.2s;}
+.ap-hamburger:hover{color:white;}
+.ap-hamburger span{display:block;width:22px;height:2px;background:currentColor;margin:5px 0;border-radius:2px;transition:all 0.3s;}
+.ap-hamburger.open span:nth-child(1){transform:rotate(45deg) translate(5px,5px);}
+.ap-hamburger.open span:nth-child(2){opacity:0;}
+.ap-hamburger.open span:nth-child(3){transform:rotate(-45deg) translate(5px,-5px);}
+
+/* ── Mobile drawer overlay ── */
+.ap-drawer-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:500;animation:fadeIn 0.2s ease;}
+.ap-drawer-overlay.open{display:block;}
+.ap-drawer{position:fixed;top:0;left:0;bottom:0;width:260px;background:#1e293b;z-index:501;transform:translateX(-100%);transition:transform 0.3s ease;display:flex;flex-direction:column;padding:24px 0;overflow-y:auto;}
+.ap-drawer.open{transform:translateX(0);}
+.ap-drawer-close{position:absolute;top:16px;right:16px;background:rgba(255,255,255,0.08);border:none;color:#94a3b8;width:32px;height:32px;border-radius:8px;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;}
+.ap-drawer-close:hover{color:white;background:rgba(255,255,255,0.15);}
+.ap-drawer-logo{height:40px;width:auto;object-fit:contain;background:#0f172a;border-radius:8px;padding:4px 10px;margin:0 16px 24px;}
+
+@keyframes fadeIn{from{opacity:0;}to{opacity:1;}}
+
+@media(max-width:900px){
+  .ap-hamburger{display:block;}
+}
+
+/* ── Mobile bottom tab bar ── */
+.ap-bottom-nav{
+  display:none;
+  position:fixed;
+  bottom:0;left:0;right:0;
+  height:68px;
+  background:#1e293b;
+  border-top:1px solid #334155;
+  z-index:200;
+  align-items:center;
+  justify-content:space-around;
+  padding:0 8px;
+  box-shadow:0 -4px 20px rgba(0,0,0,0.3);
+}
+.ap-tab-item{
+  display:flex;flex-direction:column;align-items:center;
+  gap:4px;cursor:pointer;flex:1;
+  padding:8px 4px;border-radius:10px;
+  transition:all 0.15s;color:#64748b;
+  font-family:'DM Sans',sans-serif;font-size:11px;font-weight:600;
+}
+.ap-tab-item.active{color:#f97316;}
+.ap-tab-item:hover{color:#e2e8f0;}
+.ap-tab-icon{font-size:22px;line-height:1;}
+.ap-tab-dot{
+  width:4px;height:4px;border-radius:50%;
+  background:#f97316;margin-top:-2px;
+  opacity:0;transition:opacity 0.15s;
+}
+.ap-tab-item.active .ap-tab-dot{opacity:1;}
 `;
 
 // ─── Dashboard ────────────────────────────────────────────────────────────────
@@ -225,16 +306,26 @@ const Dashboard = ({ products }) => {
 };
 
 // ─── List Products ────────────────────────────────────────────────────────────
+const PAGE_SIZE_LIST = 15;
+
 const ListProducts = ({ products, onDelete }) => {
-  const [search,  setSearch]  = useState("");
-  const [catFilter, setCat]   = useState("");
-  const [confirm, setConfirm] = useState(null);
+  const [search,    setSearch]   = useState("");
+  const [catFilter, setCat]      = useState("");
+  const [confirm,   setConfirm]  = useState(null);
+  const [visible,   setVisible]  = useState(PAGE_SIZE_LIST);
 
   const filtered = products.filter(p => {
     const ok_s = !search || (p.title || "").toLowerCase().includes(search.toLowerCase());
     const ok_c = !catFilter || p.category === catFilter;
     return ok_s && ok_c;
   });
+
+  // Reset pagination when search/filter changes
+  const handleSearch = (val) => { setSearch(val); setVisible(PAGE_SIZE_LIST); };
+  const handleCat    = (val) => { setCat(val);    setVisible(PAGE_SIZE_LIST); };
+
+  const shown   = filtered.slice(0, visible);
+  const hasMore = visible < filtered.length;
 
   const handleDelete = async (id) => {
     await fetch("/api/removeproduct", {
@@ -246,19 +337,29 @@ const ListProducts = ({ products, onDelete }) => {
     onDelete();
   };
 
+  const DeleteBtns = ({ id }) => confirm === id ? (
+    <div style={{display:"flex",gap:6}}>
+      <button onClick={() => handleDelete(id)} style={{background:"#ef4444",color:"white",border:"none",borderRadius:6,padding:"4px 10px",cursor:"pointer",fontSize:12,fontWeight:600}}>Yes</button>
+      <button onClick={() => setConfirm(null)} style={{background:"#f1f5f9",border:"none",borderRadius:6,padding:"4px 10px",cursor:"pointer",fontSize:12}}>No</button>
+    </div>
+  ) : (
+    <button className="lp-del-btn" onClick={() => setConfirm(id)}>Delete</button>
+  );
+
   return (
     <div className="ap-card">
+      {/* Toolbar */}
       <div className="lp-toolbar">
         <div className="lp-search">
           <span>🔍</span>
           <input
             placeholder="Search listings..."
             value={search}
-            onChange={e => setSearch(e.target.value)}
+            onChange={e => handleSearch(e.target.value)}
           />
-          {search && <button onClick={() => setSearch("")} style={{background:"none",border:"none",cursor:"pointer",color:"#94a3b8"}}>✕</button>}
+          {search && <button onClick={() => handleSearch("")} style={{background:"none",border:"none",cursor:"pointer",color:"#94a3b8"}}>✕</button>}
         </div>
-        <select className="lp-filter-select" value={catFilter} onChange={e => setCat(e.target.value)}>
+        <select className="lp-filter-select" value={catFilter} onChange={e => handleCat(e.target.value)}>
           <option value="">All categories</option>
           {CATEGORIES.map(c => <option key={c} value={c} style={{textTransform:"capitalize"}}>{c.charAt(0).toUpperCase()+c.slice(1)}</option>)}
         </select>
@@ -271,54 +372,71 @@ const ListProducts = ({ products, onDelete }) => {
           <div style={{fontWeight:600,color:"#475569"}}>No listings found</div>
         </div>
       ) : (
-        <div style={{overflowX:"auto"}}>
-          <table className="lp-table">
-            <thead>
-              <tr>
-                <th>Image</th>
-                <th>Title</th>
-                <th>Price</th>
-                <th>Category</th>
-                <th>Status</th>
-                <th>Date</th>
-                <th>Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.map(p => (
-                <tr key={p._id}>
-                  <td>
-                    <img
-                      className="lp-thumb"
-                      src={p.images?.[0] || "/placeholder.jpg"}
-                      alt={p.title}
-                      onError={e => e.target.src = "/placeholder.jpg"}
-                    />
-                  </td>
-                  <td><div className="lp-title" title={p.title}>{p.title}</div></td>
-                  <td><span className="lp-price">₦{fmt(p.price)}</span></td>
-                  <td style={{textTransform:"capitalize",fontSize:12,color:"#64748b"}}>{p.category}</td>
-                  <td>
-                    <span className={`lp-badge ${p.available ? "avail" : "unavail"}`}>
-                      {p.available ? "Active" : "Inactive"}
-                    </span>
-                  </td>
-                  <td style={{fontSize:12,color:"#94a3b8"}}>{fmtDate(p.createdAt)}</td>
-                  <td>
-                    {confirm === p._id ? (
-                      <div style={{display:"flex",gap:6}}>
-                        <button onClick={() => handleDelete(p._id)} style={{background:"#ef4444",color:"white",border:"none",borderRadius:6,padding:"4px 10px",cursor:"pointer",fontSize:12,fontWeight:600}}>Yes</button>
-                        <button onClick={() => setConfirm(null)} style={{background:"#f1f5f9",border:"none",borderRadius:6,padding:"4px 10px",cursor:"pointer",fontSize:12}}>No</button>
-                      </div>
-                    ) : (
-                      <button className="lp-del-btn" onClick={() => setConfirm(p._id)}>Delete</button>
-                    )}
-                  </td>
+        <>
+          {/* ── Desktop table ── */}
+          <div className="lp-table-wrap" style={{overflowX:"auto"}}>
+            <table className="lp-table">
+              <thead>
+                <tr>
+                  <th>Image</th><th>Title</th><th>Price</th>
+                  <th>Category</th><th>Status</th><th>Date</th><th>Action</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {shown.map(p => (
+                  <tr key={p._id}>
+                    <td><img className="lp-thumb" src={p.images?.[0]||"/placeholder.jpg"} alt={p.title} onError={e=>e.target.src="/placeholder.jpg"} /></td>
+                    <td><div className="lp-title" title={p.title}>{p.title}</div></td>
+                    <td><span className="lp-price">₦{fmt(p.price)}</span></td>
+                    <td style={{textTransform:"capitalize",fontSize:12,color:"#64748b"}}>{p.category}</td>
+                    <td><span className={`lp-badge ${p.available?"avail":"unavail"}`}>{p.available?"Active":"Inactive"}</span></td>
+                    <td style={{fontSize:12,color:"#94a3b8"}}>{fmtDate(p.createdAt)}</td>
+                    <td><DeleteBtns id={p._id} /></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* ── Mobile card list ── */}
+          <div className="lp-card-list">
+            {shown.map(p => (
+              <div key={p._id} className="lp-card">
+                <img className="lp-card-img" src={p.images?.[0]||"/placeholder.jpg"} alt={p.title} onError={e=>e.target.src="/placeholder.jpg"} />
+                <div className="lp-card-body">
+                  <div className="lp-card-title" title={p.title}>{p.title}</div>
+                  <div className="lp-card-meta">
+                    <span className="lp-card-price">₦{fmt(p.price)}</span>
+                    <span className="lp-card-cat">{p.category}</span>
+                    <span className={`lp-badge ${p.available?"avail":"unavail"}`}>{p.available?"Active":"Inactive"}</span>
+                  </div>
+                  <div className="lp-card-actions">
+                    <DeleteBtns id={p._id} />
+                    <span style={{fontSize:11,color:"#94a3b8",marginLeft:"auto"}}>{fmtDate(p.createdAt)}</span>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* ── Load more ── */}
+          {hasMore && (
+            <div className="lp-load-wrap">
+              <div className="lp-load-progress">
+                <div className="lp-load-bar" style={{width:`${(visible/filtered.length)*100}%`}} />
+              </div>
+              <p className="lp-load-label">Showing <strong>{shown.length}</strong> of <strong>{filtered.length}</strong></p>
+              <button className="lp-load-btn" onClick={() => setVisible(v => v + PAGE_SIZE_LIST)}>
+                Load more →
+              </button>
+            </div>
+          )}
+          {!hasMore && filtered.length > PAGE_SIZE_LIST && (
+            <div style={{textAlign:"center",padding:16,fontSize:13,color:"#94a3b8",borderTop:"1px solid #f1f5f9"}}>
+              ✅ All <strong>{filtered.length}</strong> listings shown
+            </div>
+          )}
+        </>
       )}
     </div>
   );
@@ -504,6 +622,7 @@ const AdminPanel = () => {
   const [page,     setPage]     = useState("dashboard");
   const [products, setProducts] = useState([]);
   const [loading,  setLoading]  = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const fetchProducts = useCallback(async () => {
     try {
@@ -537,10 +656,47 @@ const AdminPanel = () => {
       <div className="ap">
         {/* Navbar */}
         <nav className="ap-nav">
-          <img src={logo} alt="GeneralMarket" className="ap-nav-logo" />
-          <span className="ap-nav-title">Admin Panel</span>
+          <button
+            className={`ap-hamburger ${sidebarOpen ? "open" : ""}`}
+            onClick={() => setSidebarOpen(o => !o)}
+            aria-label="Toggle menu"
+          >
+            <span/><span/><span/>
+          </button>
           <span className="ap-nav-badge">Admin</span>
         </nav>
+
+        {/* ── Mobile sidebar drawer ── */}
+        <div className={`ap-drawer-overlay ${sidebarOpen ? "open" : ""}`} onClick={() => setSidebarOpen(false)} />
+        <aside className={`ap-drawer ${sidebarOpen ? "open" : ""}`}>
+          <button className="ap-drawer-close" onClick={() => setSidebarOpen(false)}>✕</button>
+          <img src={logo} alt="GeneralMarket" className="ap-drawer-logo" />
+          <div className="ap-sidebar-section">
+            <div className="ap-sidebar-label">Menu</div>
+            {navItems.map(item => (
+              <div
+                key={item.id}
+                className={`ap-nav-item ${page === item.id ? "active" : ""}`}
+                onClick={() => { setPage(item.id); setSidebarOpen(false); }}
+              >
+                <span className="nav-icon">{item.icon}</span>
+                {item.label}
+              </div>
+            ))}
+          </div>
+          <div className="ap-sidebar-section" style={{marginTop:"auto",paddingTop:24}}>
+            <div className="ap-sidebar-label">Quick Stats</div>
+            <div style={{padding:"12px",background:"rgba(255,255,255,0.05)",borderRadius:10,color:"#94a3b8",fontSize:13}}>
+              <div style={{display:"flex",justifyContent:"space-between",marginBottom:8}}>
+                <span>Total</span><span style={{color:"#f1f5f9",fontWeight:700}}>{products.length}</span>
+              </div>
+              <div style={{display:"flex",justifyContent:"space-between"}}>
+                <span>Active</span>
+                <span style={{color:"#4ade80",fontWeight:700}}>{products.filter(p=>p.available).length}</span>
+              </div>
+            </div>
+          </div>
+        </aside>
 
         <div className="ap-body">
           {/* Sidebar */}
@@ -588,6 +744,21 @@ const AdminPanel = () => {
             )}
           </main>
         </div>
+
+        {/* ── Mobile bottom tab bar ── */}
+        <nav className="ap-bottom-nav">
+          {navItems.map(item => (
+            <div
+              key={item.id}
+              className={`ap-tab-item ${page === item.id ? "active" : ""}`}
+              onClick={() => setPage(item.id)}
+            >
+              <span className="ap-tab-icon">{item.icon}</span>
+              <span>{item.label}</span>
+              <div className="ap-tab-dot" />
+            </div>
+          ))}
+        </nav>
       </div>
     </>
   );
