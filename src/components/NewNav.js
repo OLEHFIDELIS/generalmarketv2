@@ -58,7 +58,10 @@ const NewNav = () => {
         {/* ── Desktop right links ── */}
         <div className="navbar-actions">
           {isLoggedIn ? (
-            <button className="nav-link" onClick={handleLogout}>Logout</button>
+            <>
+              <Link to="/dashboard" className="nav-link">My Account</Link>
+              <button className="nav-link" onClick={handleLogout}>Logout</button>
+            </>
           ) : (
             <>
               <Link to="/login" className="nav-link">Login</Link>

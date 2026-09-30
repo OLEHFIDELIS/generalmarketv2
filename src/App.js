@@ -7,6 +7,7 @@ import Product from './pages/Product';
 import Cart from './pages/Cart';
 import AdminPanel from './pages/AdminPanel';
 import AllListings from './pages/AllListings';
+import UserDashboard from './pages/Dashboard/UserDashboard';
 import NewNav from './components/NewNav';
 import Footer from './components/Footer';
 import { categories } from "./data/categories";
@@ -36,6 +37,7 @@ function App() {
               <Route path="/login" element={<LoginSignup />} />
               <Route path="/all" element={<AllListings />} />
               <Route path="/search" element={<AllListings />} />
+              <Route path="/dashboard" element={<UserDashboard />} />
             </Routes>
             <Footer />
           </div>
