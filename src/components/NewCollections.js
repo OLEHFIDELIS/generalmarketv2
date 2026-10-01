@@ -25,6 +25,7 @@ const NewCollections = () => {
         {newCollection.map((item, i) => (
           <Item
             key={i}
+            _id={item._id}
             id={item.id}
             name={item.title || item.name}
             images={item.images}

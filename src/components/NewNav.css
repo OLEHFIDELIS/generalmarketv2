@@ -307,12 +307,13 @@
    RESPONSIVE
 ═══════════════════════════════════════ */
 @media (max-width: 900px) {
-  .navbar { padding: 0 16px; }
+  .navbar { padding: 0 16px; height: 72px; }
   .navbar-spacer { display: none; }
   .navbar-search { display: none; }
   .navbar-actions { display: none; }
   .navbar-mobile-icons { display: flex; }
-  .navbar-logo img { height: 56px; }
+  .navbar-logo img { height: 48px; }
+  .navbar-mobile-icons { gap: 18px; }
 }
 
 @keyframes slideUp {
@@ -323,3 +324,27 @@
   from { opacity: 0; }
   to { opacity: 1; }
 }
+
+/* ── Account dropdown ── */
+.acct { position: relative; }
+.acct-trigger { display: flex; align-items: center; gap: 8px; background: none; border: 1.5px solid transparent; border-radius: 999px; padding: 4px 10px 4px 4px; cursor: pointer; font: 600 14.5px 'DM Sans', sans-serif; color: #475569; transition: all .15s; }
+.acct-trigger:hover, .acct-trigger[aria-expanded="true"] { border-color: #e2e8f0; background: #f8fafc; color: #0f172a; }
+.acct-avatar { width: 30px; height: 30px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
+.acct-initial { display: grid; place-items: center; background: #f97316; color: #fff; font-weight: 800; font-size: 14px; }
+.acct-hi b { font-weight: 800; }
+.acct-caret { font-size: 10px; color: #94a3b8; transition: transform .2s; } .acct-caret.open { transform: rotate(180deg); }
+.acct-menu { position: absolute; right: 0; top: calc(100% + 8px); min-width: 230px; background: #fff; border: 1.5px solid #e2e8f0; border-radius: 14px; box-shadow: 0 14px 34px rgba(15,23,42,.14); padding: 8px; z-index: 1000; animation: acctIn .14s ease-out; }
+@keyframes acctIn { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }
+.acct-menu a, .acct-menu button { display: flex; align-items: center; gap: 12px; width: 100%; padding: 9px 12px; border: 0; background: none; border-radius: 9px; font: 600 14px 'DM Sans', sans-serif; color: #334155; text-decoration: none; cursor: pointer; text-align: left; }
+.acct-menu a svg, .acct-menu button svg { width: 15px; color: #94a3b8; flex-shrink: 0; }
+.acct-menu a:hover, .acct-menu button:hover { background: #fff7ed; color: #ea580c; } .acct-menu a:hover svg, .acct-menu button:hover svg { color: #f97316; }
+.acct-sep { height: 1px; background: #f1f5f9; margin: 6px 4px; }
+.acct-badge { margin-left: auto; background: #ef4444; color: #fff; font: 700 11px 'DM Sans', sans-serif; font-style: normal; padding: 1px 7px; border-radius: 999px; }
+.acct-logout:hover { background: #fef2f2 !important; color: #dc2626 !important; }
+
+/* ── Minimal mobile bar: logo · account · hamburger ── */
+.m-acct { position: relative; color: #6b6b6b; }
+.m-dot { position: absolute; top: 2px; right: 0; width: 10px; height: 10px; border-radius: 50%; background: #ef4444; border: 2px solid #fff; }
+.m-burger { flex-direction: column; justify-content: center; align-items: stretch; gap: 6px; width: 28px; height: 28px; padding: 0; color: #6b6b6b; }
+.m-burger span { display: block; height: 2px; background: currentColor; border-radius: 2px; }
+.m-burger:hover { color: #f97316; }

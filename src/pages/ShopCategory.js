@@ -239,6 +239,7 @@ const ShopCategory = ({ category }) => {
               {shown.map((item) => (
                 <Item
                   key={item._id || item.id}
+                  _id={item._id}
                   id={item.id}
                   name={item.title}
                   images={item.images}

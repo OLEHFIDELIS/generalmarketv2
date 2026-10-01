@@ -26,6 +26,7 @@ const Popular = () => {
         {popularProducts.map((item, i) => (
           <Item
             key={i}
+            _id={item._id}
             id={item.id}
             name={item.title}
             images={item.images}

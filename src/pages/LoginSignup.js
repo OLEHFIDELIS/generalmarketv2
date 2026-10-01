@@ -2,8 +2,12 @@ import React, { useState } from "react";
 import "./LoginSignup.css";
 import logo from "../assets/gmarketlogo.png";
 
+// Referral link: https://site/#/login?ref=CODE  → opens the Register tab and credits the referrer
+const readRef = () => new URLSearchParams(window.location.hash.split("?")[1] || "").get("ref") || "";
+
 const LoginSignup = () => {
-  const [state,    setState]   = useState("Login");
+  const [ref] = useState(readRef);
+  const [state,    setState]   = useState(ref ? "Sign Up" : "Login");
   const [formData, setFormData] = useState({ name: "", email: "", password: "" });
   const [loading,  setLoading]  = useState(false);
   const [error,    setError]    = useState("");
@@ -27,7 +31,7 @@ const LoginSignup = () => {
       const res  = await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(state === "Sign Up" && ref ? { ...formData, ref } : formData),
       });
       const data = await res.json();
       if (data.success) {

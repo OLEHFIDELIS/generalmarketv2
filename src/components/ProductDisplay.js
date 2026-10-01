@@ -3,9 +3,14 @@ import {
   FaClock, FaEye, FaMapMarkerAlt, FaWhatsapp,
   FaPhoneAlt, FaRegCommentDots, FaStar, FaShieldAlt,
   FaChevronLeft, FaChevronRight, FaShareAlt,
-  FaHeart, FaCheckCircle, FaExpand, FaTimes, FaHome, FaTag
+  FaHeart, FaCheckCircle, FaExpand, FaTimes, FaHome, FaTag, FaGavel, FaComments
 } from "react-icons/fa";
+import { Link, useNavigate } from "react-router-dom";
 import "./ProductDisplay.css";
+import "../pages/Dashboard/Dashboard.css";
+import { api, money } from "../api";
+import { useAuth } from "../context/AuthContext";
+import useFavorite from "../hooks/useFavorite";
 
 const fmt = (iso) => {
   if (!iso) return "";
@@ -16,11 +21,54 @@ export default function ProductDisplay({ product }) {
   const p = product || {};
   const images = Array.isArray(p.images) && p.images.length > 0 ? p.images : ["/placeholder.jpg"];
   const [mainIndex, setMainIndex] = useState(0);
-  const [liked, setLiked] = useState(false);
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const { favorited: liked, toggle: toggleFav } = useFavorite(p._id);
+  const [detail, setDetail] = useState(null);       // { listing, seller, isOwner } from /api/listings/:id
+  const [panel, setPanel] = useState(null);         // "offer" | "message" | null
+  const [form, setForm] = useState({ amount: "", text: "" });
+  const [fb, setFb] = useState(null);               // { type, text }
+  const [busy, setBusy] = useState(false);
   const [phoneRevealed, setPhoneRevealed] = useState(false);
   const [copied, setCopied] = useState(false);
   const [lightbox, setLightbox] = useState(false);
   const [lbIndex, setLbIndex] = useState(0);
+
+  // Seller card data + one view per session
+  useEffect(() => {
+    if (!p._id) return;
+    let live = true;
+    setDetail(null); setPanel(null); setFb(null);
+    api(`/listings/${p._id}`).then((d) => live && setDetail(d)).catch(() => {});
+    const key = `gm-viewed-${p._id}`;
+    try {
+      if (!sessionStorage.getItem(key)) { sessionStorage.setItem(key, "1"); api(`/listings/${p._id}/view`, { method: "POST" }).catch(() => {}); }
+    } catch { /* storage blocked */ }
+    return () => { live = false; };
+  }, [p._id]);
+
+  const seller = detail?.seller;
+  const isOwner = !!detail?.isOwner;
+  const canContactInApp = !!seller && !isOwner;
+  const openPanel = (name) => {
+    if (!user) return navigate("/login");
+    setFb(null); setPanel(panel === name ? null : name);
+  };
+  const submitPanel = async (e) => {
+    e.preventDefault();
+    setBusy(true); setFb(null);
+    try {
+      if (panel === "message") {
+        const r = await api("/threads", { method: "POST", body: { toUserId: seller.id, listingId: p._id, text: form.text.trim() } });
+        navigate(`/dashboard/messages/${r.threadId}`);
+      } else {
+        await api("/offers", { method: "POST", body: { listingId: p._id, amount: Number(form.amount), message: form.text.trim() } });
+        setFb({ type: "success", text: "Offer sent! The seller will reply in your Offers and Messages." });
+        setPanel(null); setForm({ amount: "", text: "" });
+      }
+    } catch (er) { setFb({ type: "error", text: er.message }); }
+    finally { setBusy(false); }
+  };
 
   const prev = () => setMainIndex((i) => (i - 1 + images.length) % images.length);
   const next = () => setMainIndex((i) => (i + 1) % images.length);
@@ -55,7 +103,8 @@ export default function ProductDisplay({ product }) {
     }
   };
 
-  const sellerInitial = (p.user?.username || p.email || "S")[0].toUpperCase();
+  const sellerName = seller?.name || p.email || "Seller";
+  const sellerInitial = sellerName[0].toUpperCase();
   const categorySlug = (p.category || "").toLowerCase().replace(/ & /g, "-").replace(/\s+/g, "-");
 
   return (
@@ -140,7 +189,7 @@ export default function ProductDisplay({ product }) {
                   </>
                 )}
                 <div className="pd-img-count">{mainIndex + 1} / {images.length}</div>
-                <button className={`pd-like-btn ${liked ? "liked" : ""}`} onClick={() => setLiked(!liked)}>
+                <button className={`pd-like-btn ${liked ? "liked" : ""}`} onClick={() => p._id && toggleFav()} aria-pressed={liked} aria-label={liked ? "Remove from favorites" : "Save to favorites"}>
                   <FaHeart />
                 </button>
                 <button className="pd-expand-btn" onClick={() => openLightbox(mainIndex)} title="View fullscreen">
@@ -195,8 +244,8 @@ export default function ProductDisplay({ product }) {
                   {p.createdAt && (
                     <span><FaClock className="meta-icon" /> {fmt(p.createdAt)}</span>
                   )}
-                  {p.views !== undefined && (
-                    <span><FaEye className="meta-icon" /> {p.views} views</span>
+                  {(detail?.listing?.views ?? p.views) !== undefined && (
+                    <span><FaEye className="meta-icon" /> {detail?.listing?.views ?? p.views} views</span>
                   )}
                 </div>
 
@@ -224,20 +273,55 @@ export default function ProductDisplay({ product }) {
               <div className="pd-seller-card">
                 <h3 className="pd-section-title">Seller</h3>
                 <div className="seller-row">
-                  <div className="seller-avatar">{sellerInitial}</div>
+                  <div className="seller-avatar">
+                    {seller?.avatar ? <img src={seller.avatar} alt="" style={{ width: "100%", height: "100%", borderRadius: "inherit", objectFit: "cover" }} /> : sellerInitial}
+                  </div>
                   <div className="seller-info">
-                    <div className="seller-name">{p.user?.username || p.email || "Verified Seller"}</div>
-                    <div className="seller-stars">
-                      {[1,2,3,4,5].map(s => <FaStar key={s} className={s <= 4 ? "star-on" : "star-off"} />)}
-                      <span className="star-count">(4.0)</span>
+                    <div className="seller-name">
+                      {seller?.username ? <Link to={`/seller/${seller.username}`} style={{ color: "inherit", textDecoration: "none" }}>{sellerName}</Link> : sellerName}
                     </div>
-                    <div className="seller-verified"><FaCheckCircle className="verified-icon" /> Verified seller</div>
+                    {seller && (
+                      <div className="seller-stars">
+                        {[1,2,3,4,5].map(n => <FaStar key={n} className={n <= Math.round(seller.rating.avg) ? "star-on" : "star-off"} />)}
+                        <span className="star-count">{seller.rating.count ? `(${seller.rating.avg.toFixed(1)} · ${seller.rating.count})` : "(no ratings yet)"}</span>
+                      </div>
+                    )}
+                    {seller?.verified && <div className="seller-verified"><FaCheckCircle className="verified-icon" /> ID verified</div>}
                   </div>
                 </div>
 
+                {fb && <div className={`dx-alert dx-alert-${fb.type}`} style={{ marginTop: 12 }}>{fb.text}</div>}
+
+                {canContactInApp && (
+                  <div className="seller-ctas">
+                    <button type="button" className="cta-phone" onClick={() => openPanel("message")}><FaComments /> Message seller</button>
+                    <button type="button" className="cta-phone" onClick={() => openPanel("offer")}><FaGavel /> Make an offer</button>
+                  </div>
+                )}
+                {isOwner && <div className="dx-alert dx-alert-info" style={{ marginTop: 12 }}>This is your listing. <Link to={`/dashboard/post/${p._id}`}>Edit it</Link></div>}
+
+                {panel && (
+                  <form onSubmit={submitPanel} style={{ marginTop: 12 }}>
+                    {panel === "offer" && (
+                      <div className="dx-field">
+                        <label>Your offer (₦)</label>
+                        <input className="dx-input" type="number" min="1" required autoFocus value={form.amount} onChange={(e) => setForm({ ...form, amount: e.target.value })} placeholder={`Asking price ${money(p.price)}`} />
+                      </div>
+                    )}
+                    <div className="dx-field">
+                      <label>{panel === "offer" ? "Message (optional)" : "Message"}</label>
+                      <textarea className="dx-textarea" rows={3} maxLength={panel === "offer" ? 500 : 2000} required={panel === "message"} value={form.text} onChange={(e) => setForm({ ...form, text: e.target.value })} placeholder={panel === "offer" ? "Add a note to the seller…" : "Hi, is this still available?"} />
+                    </div>
+                    <div className="dx-actions">
+                      <button className="dx-btn dx-btn-primary" disabled={busy}>{busy ? "Sending…" : panel === "offer" ? "Send offer" : "Send message"}</button>
+                      <button type="button" className="dx-btn dx-btn-ghost" onClick={() => setPanel(null)}>Cancel</button>
+                    </div>
+                  </form>
+                )}
+
                 <div className="seller-ctas">
                   <a
-                    href={`https://wa.me/${(p.phone || "+2348141846896").replace(/\D/g, "")}`}
+                    href={`https://wa.me/${(p.phone || seller?.business?.phone || "+2348141846896").replace(/\D/g, "")}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="cta-whatsapp"
@@ -268,4 +352,3 @@ export default function ProductDisplay({ product }) {
     </>
   );
 }
-

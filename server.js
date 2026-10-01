@@ -6,79 +6,80 @@ const path = require("path");
 const cors = require("cors");
 require("dotenv").config();
 const port = process.env.PORT || 4000;
-const jwt = require("jsonwebtoken");
 
 const { CloudinaryStorage } = require("multer-storage-cloudinary");
 const cloudinary = require("./cloudinary");
 
 const Product = require("./schema/product");
 const User = require("./schema/user");
+const { mongoUri } = require("./lib/db");
+const { fetchUser } = require("./lib/auth");
+const L = require("./lib/listings");
+
+// Behind Hostinger's proxy every request would otherwise share one IP, which breaks the rate limiters.
+app.set("trust proxy", 1);
 
 // --------------------------------------------------
-// CORS
+// CORS + body parsing
 // --------------------------------------------------
-app.use(cors({
-  origin: "*",
-  credentials: true,
-}));
-
-// --------------------------------------------------
-// Middleware
-// --------------------------------------------------
+app.use(cors({ origin: "*", credentials: true }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use("/images", express.static("uploads/images"));
 
 // --------------------------------------------------
-// MongoDB Connection
+// MongoDB
 // --------------------------------------------------
 mongoose
-  .connect(`mongodb+srv://${process.env.DB_NAME}:${process.env.DB_PASWORD}@cluster0.1fb4jph.mongodb.net/e-commerce`)
+  .connect(mongoUri())
   .then(() => console.log("✅ MongoDB Connected"))
   .catch((err) => console.error("❌ MongoDB error:", err.message));
 
 // --------------------------------------------------
-// JWT Secret
+// Dashboard API (auth, profile, listings, messages, offers, ratings, favourites, alerts, admin)
+// Order matters: the specific /api/me/* routers go before the generic /api/me router.
 // --------------------------------------------------
-const JWT_SECRET = process.env.JWT_SECRET || "secret_ecom_dev";
+const listingRoutes = require("./routes/listings");
+
+app.use("/api", require("./routes/auth"));                     // POST /signup, /login
+app.use("/api/me/listings", listingRoutes.mine);
+app.use("/api/me/favorites", require("./routes/favorites"));
+app.use("/api/me/alerts", require("./routes/alerts"));
+app.use("/api/me", require("./routes/me"));                    // /, /avatar, /upload, /business, /password, /dashboard, /referrals, /verification
+app.use("/api", require("./routes/messages"));                 // /me/threads, /me/unread-count, /threads/*
+app.use("/api", require("./routes/offers"));                   // /offers, /me/offers
+app.use("/api", require("./routes/ratings"));                  // /ratings, /me/ratings
+app.use("/api", listingRoutes.pub);                            // /listings/:id, /sellers/:username, /companies
+app.use("/api/admin", require("./routes/admin"));
 
 // --------------------------------------------------
-// Cloudinary / Multer
+// Legacy storefront API (kept as-is for the shop pages + Admin panel)
 // --------------------------------------------------
 const storage = new CloudinaryStorage({
-  cloudinary: cloudinary,
+  cloudinary,
   params: {
     folder: "generalmarket",
-    allowed_formats: ["jpg", "jpeg", "png", "gif"],
-    transformation: [{ width: 1000, height: 1000, crop: "limit" }]
-  }
+    allowed_formats: ["jpg", "jpeg", "png", "gif", "webp"],
+    transformation: [{ width: 1000, height: 1000, crop: "limit" }],
+  },
 });
-const upload = multer({ storage });
+const upload = multer({ storage, limits: { fileSize: 8 * 1024 * 1024, files: 12 } });
 
-// --------------------------------------------------
-// API ROUTES — all prefixed with /api
-// --------------------------------------------------
-
-// Upload images
+// Upload images (used by the Admin panel; dashboard users use the authenticated /api/me/upload)
 app.post("/api/upload", upload.array("images", 12), (req, res) => {
-  try {
-    if (!req.files || req.files.length === 0)
-      return res.status(400).json({ success: false, message: "No files uploaded" });
-    const imageUrls = req.files.map((file) => file.path);
-    return res.json({ success: true, urls: imageUrls });
-  } catch (error) {
-    console.error("Upload Error:", error);
-    return res.status(500).json({ success: false, message: "Upload failed" });
-  }
+  if (!req.files || req.files.length === 0) return res.status(400).json({ success: false, message: "No files uploaded" });
+  res.json({ success: true, urls: req.files.map((f) => f.path) });
 });
 
-// Add product
+// Add product (Admin panel). Listings created here have no owner and never expire.
 app.post("/api/addproduct", async (req, res) => {
   try {
-    const products = await Product.find({});
-    const newId = products.length > 0 ? products[products.length - 1].id + 1 : 1;
     const { category, title, description, price, transaction, condition, region, city, address, zip, phone, email, images } = req.body;
-    const product = new Product({ id: newId, category, title, description, price, transaction, condition, region, city, address, zip, phone, email, images, createdAt: new Date(), available: true });
+    const product = new Product({
+      id: await L.nextProductId(),
+      category, title, description, price, transaction, condition, region, city, address, zip, phone, email, images,
+      status: "active", createdAt: new Date(), available: true,
+    });
     await product.save();
     res.json({ success: true, message: "Product created successfully", product });
   } catch (err) {
@@ -87,157 +88,101 @@ app.post("/api/addproduct", async (req, res) => {
   }
 });
 
-// Remove product
+// Remove product (Admin panel)
 app.post("/api/removeproduct", async (req, res) => {
   try {
-    const { id } = req.body;
-    const product = await Product.findById(id);
+    const product = await Product.findById(req.body.id);
     if (!product) return res.status(404).json({ success: false, message: "Product not found" });
-    if (product.cloudinary_id) await cloudinary.uploader.destroy(product.cloudinary_id);
-    await Product.findByIdAndDelete(id);
-    return res.json({ success: true, message: "Product deleted successfully" });
+    await Product.findByIdAndDelete(product._id);
+    await L.destroyImages(product.images);
+    res.json({ success: true, message: "Product deleted successfully" });
   } catch (error) {
     console.error("REMOVE PRODUCT ERROR:", error);
     res.status(500).json({ success: false, message: "Failed to delete product" });
   }
 });
 
-// Get all products
+// Seeded Fisher-Yates so "popular" / "new" rotate once a day
+function dailyShuffle(list, offset = 0) {
+  const t = new Date();
+  let s = t.getFullYear() * 10000 + (t.getMonth() + 1) * 100 + t.getDate() + offset;
+  const arr = [...list];
+  for (let i = arr.length - 1; i > 0; i--) {
+    s = (s * 1664525 + 1013904223) & 0xffffffff;
+    const j = Math.abs(s) % (i + 1);
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+// All publicly visible products (hides pending / rejected / expired / sold)
 app.get("/api/allproduct", async (req, res) => {
-  const products = await Product.find({});
-  res.send(products);
+  res.send(await Product.find(L.liveQuery()));
 });
 
-// Newest listings — rotates every 24 hours (picks 8 from the newest 20)
 app.get("/api/newcollection", async (req, res) => {
-  try {
-    // Get the 20 most recently added products
-    const recent = await Product.find({}).sort({ createdAt: -1 }).limit(20);
-    if (recent.length === 0) return res.send([]);
-
-    // Daily seed shuffle within those 20
-    const today = new Date();
-    const seed  = today.getFullYear() * 10000 + (today.getMonth() + 1) * 100 + today.getDate() + 7; // +7 offset so it differs from popular
-
-    const arr = [...recent];
-    let s = seed;
-    for (let i = arr.length - 1; i > 0; i--) {
-      s = (s * 1664525 + 1013904223) & 0xffffffff;
-      const j = Math.abs(s) % (i + 1);
-      [arr[i], arr[j]] = [arr[j], arr[i]];
-    }
-
-    res.send(arr.slice(0, 8));
-  } catch (err) {
-    res.status(500).json({ error: "Failed to fetch new collection" });
-  }
+  const recent = await Product.find(L.liveQuery()).sort({ createdAt: -1 }).limit(20);
+  res.send(dailyShuffle(recent, 7).slice(0, 8));
 });
 
-// Popular products — rotates every 24 hours using daily seed shuffle
 app.get("/api/popular", async (req, res) => {
-  try {
-    const allProducts = await Product.find({});
-    if (allProducts.length === 0) return res.send([]);
-
-    // Daily seed: changes at midnight every day
-    const today = new Date();
-    const seed  = today.getFullYear() * 10000 + (today.getMonth() + 1) * 100 + today.getDate();
-
-    // Seeded Fisher-Yates shuffle
-    const arr = [...allProducts];
-    let s = seed;
-    for (let i = arr.length - 1; i > 0; i--) {
-      s = (s * 1664525 + 1013904223) & 0xffffffff;
-      const j = Math.abs(s) % (i + 1);
-      [arr[i], arr[j]] = [arr[j], arr[i]];
-    }
-
-    res.send(arr.slice(0, 8));
-  } catch (err) {
-    res.status(500).json({ error: "Failed to fetch popular products" });
-  }
+  res.send(dailyShuffle(await Product.find(L.liveQuery())).slice(0, 8));
 });
 
-// Signup
-app.post("/api/signup", async (req, res) => {
-  const check = await User.findOne({ email: req.body.email });
-  if (check) return res.status(400).json({ success: false, errors: "email address already exist" });
-  let cart = {};
-  for (let i = 0; i < 300; i++) { cart[i] = 0; }
-  const user = new User({ name: req.body.name, email: req.body.email, password: req.body.password, cart });
-  await user.save();
-  const token = jwt.sign({ user: { id: user.id } }, JWT_SECRET);
-  res.json({ success: true, token });
-});
-
-// Login
-app.post("/api/login", async (req, res) => {
-  const user = await User.findOne({ email: req.body.email });
-  if (user) {
-    const passMatch = req.body.password === user.password;
-    if (passMatch) {
-      const token = jwt.sign({ user: { id: user.id } }, JWT_SECRET);
-      res.json({ success: true, token });
-    } else {
-      res.json({ success: false, error: "Password or Username is Incorrect" });
-    }
-  } else {
-    res.json({ success: false, error: "Wrong Email or Password" });
-  }
-});
-
-// Auth middleware
-const fetchUser = async (req, res, next) => {
-  const token = req.header("auth-token");
-  if (!token) return res.status(401).send({ errors: "Please Authenticate using Valid Token" });
-  try {
-    const data = jwt.verify(token, JWT_SECRET);
-    req.user = data.user;
-    next();
-  } catch (error) {
-    res.status(401).send({ errors: "Please authenticate using a valid token" });
-  }
-};
-
-// Cart
+// Cart (same behaviour as before, now using the shared auth middleware)
 app.post("/api/addtocart", fetchUser, async (req, res) => {
-  const userData = await User.findOne({ _id: req.user.id });
-  userData.cart[req.body.itemId] += 1;
-  await User.findOneAndUpdate({ _id: req.user.id }, { cart: userData.cart });
+  const u = await User.findById(req.user.id).select("cart");
+  const cart = { ...(u.cart || {}) };
+  cart[req.body.itemId] = (Number(cart[req.body.itemId]) || 0) + 1;
+  await User.updateOne({ _id: req.user.id }, { cart });
   res.send("Added");
 });
 
 app.post("/api/removefromcart", fetchUser, async (req, res) => {
-  const userData = await User.findOne({ _id: req.user.id });
-  if (userData.cart[req.body.itemId]) userData.cart[req.body.itemId] -= 1;
-  await User.findOneAndUpdate({ _id: req.user.id }, { cart: userData.cart });
+  const u = await User.findById(req.user.id).select("cart");
+  const cart = { ...(u.cart || {}) };
+  if (cart[req.body.itemId] > 0) cart[req.body.itemId] -= 1;
+  await User.updateOne({ _id: req.user.id }, { cart });
   res.send("Removed");
 });
 
 app.get("/api/getcart", fetchUser, async (req, res) => {
-  try {
-    const userData = await User.findOne({ _id: req.user.id });
-    res.json({ cartData: userData.cart });
-  } catch (error) {
-    res.status(500).json({ error: "Server error fetching cart" });
-  }
+  const u = await User.findById(req.user.id).select("cart");
+  res.json({ cartData: u.cart });
 });
 
 // Related products
 app.get("/api/related-products/:id", async (req, res) => {
-  try {
-    const product = await Product.findById(req.params.id);
-    if (!product) return res.status(404).json({ message: "Product not found" });
-    const category = product.category.trim();
-    const minPrice = product.price * 0.8;
-    const maxPrice = product.price * 1.2;
-    let related = await Product.find({ _id: { $ne: product._id }, category: { $regex: `^${category}$`, $options: "i" }, price: { $gte: minPrice, $lte: maxPrice } }).limit(6);
-    if (related.length === 0) related = await Product.find({ _id: { $ne: product._id }, category: { $regex: `^${category}$`, $options: "i" } }).limit(6);
-    if (related.length === 0) related = await Product.find({ _id: { $ne: product._id } }).limit(6);
-    res.json(related);
-  } catch (error) {
-    res.status(500).json({ message: "Server error" });
+  if (!/^[a-f\d]{24}$/i.test(req.params.id)) return res.status(400).json({ message: "Invalid id" });
+  const product = await Product.findById(req.params.id);
+  if (!product) return res.status(404).json({ message: "Product not found" });
+  const category = String(product.category || "").trim();
+  const base = { _id: { $ne: product._id } };
+  const live = (extra) => Product.find({ $and: [L.liveQuery(), base, extra] }).limit(6);
+  let related = await live({ category: { $regex: `^${require("./lib/profile").escapeRegex(category)}$`, $options: "i" }, price: { $gte: product.price * 0.8, $lte: product.price * 1.2 } });
+  if (!related.length) related = await live({ category: { $regex: `^${require("./lib/profile").escapeRegex(category)}$`, $options: "i" } });
+  if (!related.length) related = await live({});
+  res.json(related);
+});
+
+// --------------------------------------------------
+// Unknown /api routes → JSON 404 (instead of falling through to the React app)
+// --------------------------------------------------
+app.use("/api", (req, res) => res.status(404).json({ success: false, message: "Not found" }));
+
+// JSON error handler (Express 5 forwards rejected async handlers here)
+// eslint-disable-next-line no-unused-vars
+app.use((err, req, res, next) => {
+  if (err instanceof multer.MulterError) {
+    const message = err.code === "LIMIT_FILE_SIZE" ? "That file is too large." : "Upload failed.";
+    return res.status(400).json({ success: false, message });
   }
+  if (err?.name === "CastError" || err?.name === "ValidationError") {
+    return res.status(400).json({ success: false, message: err.message });
+  }
+  console.error("Server error:", err);
+  if (res.headersSent) return next(err);
+  res.status(500).json({ success: false, message: "Something went wrong on our side. Please try again." });
 });
 
 // --------------------------------------------------
@@ -248,9 +193,6 @@ app.get("/{*path}", (req, res) => {
   res.sendFile(path.join(__dirname, "build", "index.html"));
 });
 
-// --------------------------------------------------
-// Start server
-// --------------------------------------------------
 app.listen(port, () => {
   console.log(`✅ Server running on port ${port}`);
 });
