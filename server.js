@@ -13,7 +13,6 @@ const cloudinary = require("./cloudinary");
 const Product = require("./schema/product");
 const User = require("./schema/user");
 const { mongoUri } = require("./lib/db");
-const { fetchUser } = require("./lib/auth");
 const L = require("./lib/listings");
 
 // Behind Hostinger's proxy every request would otherwise share one IP, which breaks the rate limiters.
@@ -51,6 +50,11 @@ app.use("/api", require("./routes/offers"));                   // /offers, /me/o
 app.use("/api", require("./routes/ratings"));                  // /ratings, /me/ratings
 app.use("/api", listingRoutes.pub);                            // /listings/:id, /sellers/:username, /companies
 app.use("/api/admin", require("./routes/admin"));
+
+// Cart: new /api/cart/* API plus the old /addtocart, /removefromcart, /getcart paths (validated)
+const cartRoutes = require("./routes/cart");
+app.use("/api/cart", cartRoutes.router);
+app.use("/api", cartRoutes.legacy);
 
 // --------------------------------------------------
 // Legacy storefront API (kept as-is for the shop pages + Admin panel)
@@ -127,28 +131,6 @@ app.get("/api/newcollection", async (req, res) => {
 
 app.get("/api/popular", async (req, res) => {
   res.send(dailyShuffle(await Product.find(L.liveQuery())).slice(0, 8));
-});
-
-// Cart (same behaviour as before, now using the shared auth middleware)
-app.post("/api/addtocart", fetchUser, async (req, res) => {
-  const u = await User.findById(req.user.id).select("cart");
-  const cart = { ...(u.cart || {}) };
-  cart[req.body.itemId] = (Number(cart[req.body.itemId]) || 0) + 1;
-  await User.updateOne({ _id: req.user.id }, { cart });
-  res.send("Added");
-});
-
-app.post("/api/removefromcart", fetchUser, async (req, res) => {
-  const u = await User.findById(req.user.id).select("cart");
-  const cart = { ...(u.cart || {}) };
-  if (cart[req.body.itemId] > 0) cart[req.body.itemId] -= 1;
-  await User.updateOne({ _id: req.user.id }, { cart });
-  res.send("Removed");
-});
-
-app.get("/api/getcart", fetchUser, async (req, res) => {
-  const u = await User.findById(req.user.id).select("cart");
-  res.json({ cartData: u.cart });
 });
 
 // Related products

@@ -1,9 +1,9 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useContext } from "react";
 import {
   FaClock, FaEye, FaMapMarkerAlt, FaWhatsapp,
   FaPhoneAlt, FaRegCommentDots, FaStar, FaShieldAlt,
   FaChevronLeft, FaChevronRight, FaShareAlt,
-  FaHeart, FaCheckCircle, FaExpand, FaTimes, FaHome, FaTag, FaGavel, FaComments
+  FaHeart, FaCheckCircle, FaExpand, FaTimes, FaHome, FaTag, FaGavel, FaComments, FaShoppingCart
 } from "react-icons/fa";
 import { Link, useNavigate } from "react-router-dom";
 import "./ProductDisplay.css";
@@ -11,6 +11,7 @@ import "../pages/Dashboard/Dashboard.css";
 import { api, money } from "../api";
 import { useAuth } from "../context/AuthContext";
 import useFavorite from "../hooks/useFavorite";
+import { ShopContext } from "../context/ShopContext";
 
 const fmt = (iso) => {
   if (!iso) return "";
@@ -22,6 +23,9 @@ export default function ProductDisplay({ product }) {
   const images = Array.isArray(p.images) && p.images.length > 0 ? p.images : ["/placeholder.jpg"];
   const [mainIndex, setMainIndex] = useState(0);
   const { user } = useAuth();
+  const { cartItems, addToCart, maxQty } = useContext(ShopContext);
+  const inCart = cartItems[p.id] || 0;
+  const [cartMsg, setCartMsg] = useState("");
   const navigate = useNavigate();
   const { favorited: liked, toggle: toggleFav } = useFavorite(p._id);
   const [detail, setDetail] = useState(null);       // { listing, seller, isOwner } from /api/listings/:id
@@ -68,6 +72,12 @@ export default function ProductDisplay({ product }) {
       }
     } catch (er) { setFb({ type: "error", text: er.message }); }
     finally { setBusy(false); }
+  };
+
+  const onAddToCart = async () => {
+    setCartMsg("");
+    const r = await addToCart(p.id);
+    if (!r.ok) setCartMsg(r.message);
   };
 
   const prev = () => setMainIndex((i) => (i - 1 + images.length) % images.length);
@@ -248,6 +258,16 @@ export default function ProductDisplay({ product }) {
                     <span><FaEye className="meta-icon" /> {detail?.listing?.views ?? p.views} views</span>
                   )}
                 </div>
+
+                {!isOwner && (
+                  <div className="pd-cart-box">
+                    <button type="button" className="pd-cart-btn" onClick={onAddToCart} disabled={inCart >= maxQty}>
+                      <FaShoppingCart /> {inCart ? `Add another (${inCart} in cart)` : "Add to cart"}
+                    </button>
+                    {inCart > 0 && <Link to="/cart" className="pd-cart-link">View cart →</Link>}
+                    {cartMsg && <div className="dx-alert dx-alert-error" role="alert">{cartMsg}</div>}
+                  </div>
+                )}
 
                 <div className="pd-share-row">
                   <button className="pd-share-btn" onClick={handleShare}>

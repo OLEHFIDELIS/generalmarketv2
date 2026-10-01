@@ -1,5 +1,5 @@
 import React, { useCallback, useContext, useEffect, useState } from "react";
-import { NavLink, Navigate, Outlet, useMatch } from "react-router-dom";
+import { NavLink, Navigate, Outlet, useLocation, useMatch } from "react-router-dom";
 import {
   FaTachometerAlt, FaList, FaPlusCircle, FaEnvelope, FaGavel, FaHeart, FaBell, FaStar, FaUser, FaBriefcase,
   FaIdCard, FaGift, FaBullhorn, FaLock, FaShoppingCart, FaSignOutAlt, FaExternalLinkAlt,
@@ -13,6 +13,7 @@ import { Avatar, Spinner } from "../../components/dash/ui";
 
 export default function DashboardLayout() {
   const { user, loading, logout } = useAuth();
+  const location = useLocation();
   const { getTotalCartItems } = useContext(ShopContext);
   const [dash, setDash] = useState(null);
   const atIndex = !!useMatch({ path: "/dashboard", end: true });
@@ -29,7 +30,7 @@ export default function DashboardLayout() {
   }, [user, reloadDash]);
 
   if (loading) return <Spinner />;
-  if (!user) return <Navigate to="/login" replace />;
+  if (!user) return <Navigate to={`/login?next=${encodeURIComponent(location.pathname)}`} replace />;
 
   const c = dash?.counts || {};
   const cart = getTotalCartItems();

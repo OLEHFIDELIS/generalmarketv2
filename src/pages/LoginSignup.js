@@ -5,6 +5,12 @@ import logo from "../assets/gmarketlogo.png";
 // Referral link: https://site/#/login?ref=CODE  → opens the Register tab and credits the referrer
 const readRef = () => new URLSearchParams(window.location.hash.split("?")[1] || "").get("ref") || "";
 
+// Safe in-app path to return to after login (e.g. /#/login?next=%2Fdashboard%2Fpost). Rejects anything external.
+const readNext = () => {
+  const n = new URLSearchParams(window.location.hash.split("?")[1] || "").get("next") || "";
+  return /^\/(?!\/)[\w\-/]*$/.test(n) ? n : "";
+};
+
 const LoginSignup = () => {
   const [ref] = useState(readRef);
   const [state,    setState]   = useState(ref ? "Sign Up" : "Login");
@@ -36,7 +42,7 @@ const LoginSignup = () => {
       const data = await res.json();
       if (data.success) {
         localStorage.setItem("auth-token", data.token);
-        window.location.replace("/");
+        window.location.replace(readNext() ? `/#${readNext()}` : "/");
       } else {
         setError(data.errors || data.error || "Something went wrong. Please try again.");
       }

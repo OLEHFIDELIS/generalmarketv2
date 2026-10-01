@@ -1,16 +1,22 @@
 import React from "react";
+import { Link } from "react-router-dom";
 import "./Welcome.css";
-import { useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 
-const actions = [
-  { emoji: "📤", label: "Post a Listing", sub: "Free & easy", path: "https://wa.me/+2348141846896", external: true, accent: "#f97316" },
-  { emoji: "🔍", label: "Browse Listings", sub: "1000s of items", path: "/browse", accent: "#3b82f6" },
-  { emoji: "👤", label: "My Account", sub: "Manage profile", path: "/login", accent: "#10b981" },
-  { emoji: "💼", label: "For Business", sub: "Grow your sales", path: "/business", accent: "#8b5cf6" },
-];
+// Where each button goes. Logged-out visitors are sent to login and brought back to the same place afterwards.
+const buildActions = (loggedIn) => {
+  const gated = (path) => (loggedIn ? path : `/login?next=${encodeURIComponent(path)}`);
+  return [
+    { emoji: "📤", label: "Post a Listing",  sub: "Free & easy",     path: gated("/dashboard/post"),     accent: "#f97316" },
+    { emoji: "🔍", label: "Browse Listings", sub: "1000s of items",  path: "/all",                       accent: "#3b82f6" },
+    { emoji: "👤", label: "My Account",      sub: loggedIn ? "Open dashboard" : "Log in or sign up", path: gated("/dashboard"), accent: "#10b981" },
+    { emoji: "💼", label: "For Business",    sub: "Grow your sales", path: gated("/dashboard/business"), accent: "#8b5cf6" },
+  ];
+};
 
 const Welcome = () => {
-  const navigate = useNavigate();
+  const { isLoggedIn, loading } = useAuth();
+  const signedIn = isLoggedIn || loading;          // loading = saved token, profile still being fetched
 
   return (
     <div className="welcome-wrap">
@@ -20,19 +26,14 @@ const Welcome = () => {
           <p>Nigeria's trusted marketplace for buying and selling everything.</p>
         </div>
         <div className="welcome-actions">
-          {actions.map((a, i) => (
-            <div
-              key={i}
-              className="action-card"
-              style={{ "--ac": a.accent }}
-              onClick={() => a.external ? window.open(a.path, "_blank", "noopener,noreferrer") : navigate(a.path)}
-            >
-              <div className="ac-emoji">{a.emoji}</div>
+          {buildActions(signedIn).map((a) => (
+            <Link key={a.label} to={a.path} className="action-card" style={{ "--ac": a.accent }}>
+              <div className="ac-emoji" aria-hidden="true">{a.emoji}</div>
               <div className="ac-text">
                 <span className="ac-label">{a.label}</span>
                 <span className="ac-sub">{a.sub}</span>
               </div>
-            </div>
+            </Link>
           ))}
         </div>
       </div>

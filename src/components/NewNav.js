@@ -18,10 +18,10 @@ const NewNav = () => {
   const [searchOpen, setSearchOpen] = useState(false);
   const [query, setQuery] = useState("");
   const navigate = useNavigate();
-  const { user, isLoggedIn, logout } = useAuth();
+  const { user, isLoggedIn, loading, logout } = useAuth();
   const cartCount = getTotalCartItems();
   const [unread, setUnread] = useState(0);
-  const postHref = isLoggedIn ? "/dashboard/post" : "/login";
+  const postHref = isLoggedIn || loading ? "/dashboard/post" : "/login?next=%2Fdashboard%2Fpost";
 
   // Account dropdown: closes on outside click, Esc, or route change
   const [acctOpen, setAcctOpen] = useState(false);
