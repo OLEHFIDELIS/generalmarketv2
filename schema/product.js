@@ -75,7 +75,18 @@ const ProductSchema = new mongoose.Schema({
     renewedAt: Date,
     soldAt: Date,
     rejectionReason: String,
-    views: { type: Number, default: 0 }
+    views: { type: Number, default: 0 },
+
+    // ── Post Ad form (dynamic categories / price options / contact visibility) ──
+    // category (above) stays the lowercase top-level name; categoryPath is the full path of display labels.
+    categoryPath: [String],
+    // Category-specific details, validated against lib/categories.js and stored with a label snapshot
+    attributes: [{ _id: false, key: String, label: String, value: String, unit: String }],
+    priceType: { type: String, enum: ["fixed", "free", "contact"], default: "fixed" },
+    // undefined (legacy listings) is treated as "show", so existing ads keep working
+    showPhone: Boolean,
+    showEmail: Boolean,
+    contactName: String
 });
 
 ProductSchema.index({ owner: 1, status: 1, createdAt: -1 });
@@ -84,6 +95,3 @@ ProductSchema.index({ id: 1 });
 const Product = mongoose.model("Product", ProductSchema);
 
 module.exports = Product;
-
-
-

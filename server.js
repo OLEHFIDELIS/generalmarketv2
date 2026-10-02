@@ -121,16 +121,16 @@ function dailyShuffle(list, offset = 0) {
 
 // All publicly visible products (hides pending / rejected / expired / sold)
 app.get("/api/allproduct", async (req, res) => {
-  res.send(await Product.find(L.liveQuery()));
+  res.send((await Product.find(L.liveQuery())).map((p) => L.publicListing(p)));
 });
 
 app.get("/api/newcollection", async (req, res) => {
   const recent = await Product.find(L.liveQuery()).sort({ createdAt: -1 }).limit(20);
-  res.send(dailyShuffle(recent, 7).slice(0, 8));
+  res.send(dailyShuffle(recent, 7).slice(0, 8).map((p) => L.publicListing(p)));
 });
 
 app.get("/api/popular", async (req, res) => {
-  res.send(dailyShuffle(await Product.find(L.liveQuery())).slice(0, 8));
+  res.send(dailyShuffle(await Product.find(L.liveQuery())).slice(0, 8).map((p) => L.publicListing(p)));
 });
 
 // Related products
@@ -144,7 +144,7 @@ app.get("/api/related-products/:id", async (req, res) => {
   let related = await live({ category: { $regex: `^${require("./lib/profile").escapeRegex(category)}$`, $options: "i" }, price: { $gte: product.price * 0.8, $lte: product.price * 1.2 } });
   if (!related.length) related = await live({ category: { $regex: `^${require("./lib/profile").escapeRegex(category)}$`, $options: "i" } });
   if (!related.length) related = await live({});
-  res.json(related);
+  res.json(related.map((p) => L.publicListing(p)));
 });
 
 // --------------------------------------------------

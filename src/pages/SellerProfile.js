@@ -115,7 +115,7 @@ export default function SellerProfile() {
           {listings.length === 0 ? <p className="sp-empty">No active listings right now.</p> : (
             <div className="sp-grid">
               {listings.map((p) => (
-                <Item key={p._id} _id={p._id} id={p.id} name={p.title} images={p.images} new_price={p.price} address={p.city || p.address} />
+                <Item key={p._id} _id={p._id} id={p.id} name={p.title} images={p.images} new_price={p.price} priceType={p.priceType} address={p.city || p.address} />
               ))}
             </div>
           )}

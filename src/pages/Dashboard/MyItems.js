@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { Link, useNavigate, useOutletContext, useSearchParams } from "react-router-dom";
 import { FaEdit, FaRedo, FaTrash, FaCheck, FaPlus, FaEye, FaUndo, FaList } from "react-icons/fa";
-import { api, money, dateShort } from "../../api";
+import { api, priceText, dateShort } from "../../api";
 import { Alert, Empty, PageHead, Spinner, StatusBadge, Tabs } from "../../components/dash/ui";
 
 const STATUSES = ["active", "pending", "expired", "sold", "rejected"];
@@ -62,7 +62,7 @@ export default function MyItems() {
                   <div className="dx-row-main">
                     <Link className="dx-row-title" to={`/product/${p._id}`}>{p.title}</Link>
                     <div className="dx-row-meta">
-                      <span className="dx-row-price">{money(p.price)}</span>
+                      <span className="dx-row-price">{priceText(p)}</span>
                       <StatusBadge status={p.status} />
                       <span><FaEye /> {p.views || 0}</span>
                       <span>Posted {dateShort(p.createdAt)}</span>

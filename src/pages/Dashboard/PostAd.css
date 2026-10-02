@@ -1,0 +1,34 @@
+/* Post Ad form (dynamic) */
+.pa-req { color: #ef4444; }
+.pa-errors ul { margin: 6px 0 0; padding-left: 20px; line-height: 1.7; }
+.pa-cats { display: flex; flex-direction: column; gap: 8px; }
+.pa-crumb { font-size: 12.5px; color: #94a3b8; display: inline-flex; align-items: center; gap: 6px; }
+.pa-crumb.ok { color: #15803d; font-weight: 600; }
+.pa-count { align-self: flex-end; font-size: 11.5px; color: #94a3b8; }
+
+/* price option */
+.pa-seg { display: inline-flex; flex-wrap: wrap; gap: 8px; }
+.pa-seg button { padding: 9px 16px; border: 1.5px solid #e2e8f0; border-radius: 10px; background: #fff; color: #475569; font: 600 13.5px 'DM Sans', sans-serif; cursor: pointer; transition: all .15s; }
+.pa-seg button:hover { border-color: #f97316; color: #ea580c; }
+.pa-seg button.on { background: #fff7ed; border-color: #f97316; color: #ea580c; }
+.pa-money { display: flex; align-items: center; gap: 8px; max-width: 280px; margin-top: 6px; }
+.pa-money span { font-weight: 800; color: #64748b; }
+
+/* photos */
+.pa-photos { display: grid; grid-template-columns: repeat(auto-fill, minmax(112px, 1fr)); gap: 12px; margin-top: 14px; }
+.pa-photo { position: relative; border-radius: 12px; background: #f8fafc; cursor: grab; transition: opacity .15s, transform .15s; }
+.pa-photo.dragging { opacity: .4; transform: scale(.96); }
+.pa-photo img { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 12px; display: block; border: 1px solid #e2e8f0; }
+.pa-cover { position: absolute; left: 6px; top: 6px; background: #f97316; color: #fff; font: 700 10.5px 'DM Sans', sans-serif; padding: 2px 8px; border-radius: 6px; }
+.pa-x { position: absolute; right: -7px; top: -7px; width: 24px; height: 24px; border-radius: 50%; border: 2px solid #fff; background: #ef4444; color: #fff; cursor: pointer; display: grid; place-items: center; font-size: 10px; padding: 0; }
+.pa-photo-ctl { display: flex; justify-content: center; gap: 4px; margin-top: 6px; }
+.pa-photo-ctl button { width: 30px; height: 28px; border: 1.5px solid #e2e8f0; background: #fff; border-radius: 8px; color: #64748b; cursor: pointer; display: grid; place-items: center; font-size: 11px; padding: 0; }
+.pa-photo-ctl button:hover:not(:disabled) { border-color: #f97316; color: #ea580c; }
+.pa-photo-ctl button:disabled { opacity: .35; cursor: not-allowed; }
+
+/* seller details */
+.pa-check { display: flex; align-items: center; gap: 8px; font-size: 13px !important; font-weight: 500 !important; color: #475569 !important; text-transform: none !important; letter-spacing: 0 !important; cursor: pointer; margin-top: 4px; }
+.pa-check input { width: 16px; height: 16px; accent-color: #f97316; }
+.pa-link { color: #ea580c; font-size: 13.5px; font-weight: 600; text-decoration: none; } .pa-link:hover { text-decoration: underline; }
+.dx-input[readonly] { background: #f8fafc; color: #64748b; cursor: not-allowed; }
+@media (max-width: 520px) { .pa-photos { grid-template-columns: repeat(3, 1fr); gap: 10px; } .pa-seg button { flex: 1 1 100%; } }

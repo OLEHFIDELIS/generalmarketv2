@@ -11,28 +11,37 @@ const L = require("../lib/listings");
 const mine = express.Router();
 mine.use(fetchUser);
 
-const CATEGORIES = [
-  "electronics", "property", "vehicles", "home & furniture", "fashion & beauty", "hobbies & entertainment",
-  "services", "garden & outdoor", "jobs", "agriculture & food", "gadgets & accessories", "baby & kids", "misc & others", "adult",
-];
+const C = require("../lib/categories");
+const CATEGORIES = C.TOP_IDS;
 const TRANSACTIONS = ["sell", "buy", "rent", "exchange"];
 const CONDITIONS = ["new", "used"];
+const PRICE_TYPES = ["fixed", "free", "contact"];
 const MAX_ACTIVE = Number(process.env.MAX_ACTIVE_LISTINGS) || 100;
 const s = (v, max) => String(v ?? "").trim().slice(0, max);
+const bool = (v) => v === true || v === "true" || v === 1 || v === "1";
 
 // Validates + normalises listing fields. Returns { error } or { data }
+// Category rules (leaf required, detail fields, hidden controls) come from lib/categories.js – the same data the form uses.
 function cleanListing(b, { partial = false } = {}) {
   const d = {};
   const need = (cond, msg) => { if (!cond) throw new Error(msg); };
   try {
-    if (!partial || b.category !== undefined) {
-      const c = s(b.category, 60).toLowerCase();
-      need(CATEGORIES.includes(c), "Choose a valid category.");
-      d.category = c;
+    let spec = null;
+    if (!partial || b.categoryPath !== undefined || b.category !== undefined) {
+      const input = Array.isArray(b.categoryPath) && b.categoryPath.length ? b.categoryPath.map((x) => s(x, 60)) : b.category ? [s(b.category, 60)] : [];
+      const w = C.walk(input);
+      need(w, "Choose a valid category.");
+      need(w.leaf, "Choose a more specific category.");
+      d.category = w.top;
+      d.categoryPath = w.path;
+      spec = C.specFor(w.path);
+      const at = C.cleanAttributes(spec, b.attributes);
+      need(!at.error, at.error);
+      d.attributes = at.attributes;
     }
     if (!partial || b.title !== undefined) {
       const t = s(b.title, 120);
-      need(t.length >= 3, "Title must be at least 3 characters.");
+      need(t.length >= 5, "Title must be at least 5 characters.");
       d.title = t;
     }
     if (!partial || b.description !== undefined) {
@@ -40,29 +49,40 @@ function cleanListing(b, { partial = false } = {}) {
       need(t.length >= 10, "Description must be at least 10 characters.");
       d.description = t;
     }
-    if (!partial || b.price !== undefined) {
-      const p = Number(b.price);
-      need(Number.isFinite(p) && p >= 0 && p <= 1e12, "Enter a valid price.");
-      d.price = p;
+    if (!partial || b.price !== undefined || b.priceType !== undefined) {
+      const pt = s(b.priceType || "fixed", 10).toLowerCase();
+      need(PRICE_TYPES.includes(pt), "Choose a valid price option.");
+      d.priceType = pt;
+      if (pt === "fixed") {
+        const p = Number(b.price);
+        need(b.price !== "" && b.price !== null && b.price !== undefined && Number.isFinite(p) && p > 0 && p <= 1e12, "Enter a valid price, or choose Free / Contact for price.");
+        d.price = p;
+      } else {
+        d.price = 0;
+      }
     }
     if (!partial || b.images !== undefined) {
       const imgs = Array.isArray(b.images) ? b.images.filter(L.isHttpUrl).slice(0, 12) : [];
       need(imgs.length >= 1, "Add at least one photo.");
       d.images = imgs;
     }
-    if (b.transaction !== undefined) {
+    if (b.transaction !== undefined || spec) {
       const t = s(b.transaction, 20).toLowerCase();
       need(!t || TRANSACTIONS.includes(t), "Invalid transaction type.");
-      d.transaction = t;
+      d.transaction = spec?.hide.includes("transaction") ? "" : t;
     }
-    if (b.condition !== undefined) {
+    if (b.condition !== undefined || spec) {
       const c = s(b.condition, 20).toLowerCase();
       need(!c || CONDITIONS.includes(c), "Invalid condition.");
-      d.condition = c;
+      d.condition = spec?.hide.includes("condition") ? "" : c;
     }
     for (const [k, max] of [["region", 40], ["city", 80], ["address", 200], ["zip", 12], ["phone", 20], ["email", 120]]) {
       if (b[k] !== undefined) d[k] = s(b[k], max);
     }
+    if (d.phone) need(/^\+?[\d\s()-]{7,20}$/.test(d.phone) && d.phone.replace(/\D/g, "").length >= 7, "Enter a valid phone number.");
+    if (d.email) need(/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(d.email), "Enter a valid email address.");
+    if (b.showPhone !== undefined) d.showPhone = bool(b.showPhone);
+    if (b.showEmail !== undefined) d.showEmail = bool(b.showEmail);
     return { data: d };
   } catch (e) {
     return { error: e.message };
@@ -105,11 +125,14 @@ mine.post("/", async (req, res) => {
   const live = await Product.countDocuments({ owner: req.user.id, status: { $in: ["active", "pending"] } });
   if (live >= MAX_ACTIVE) return res.status(400).json({ success: false, message: `You can have up to ${MAX_ACTIVE} live listings.` });
 
-  const seller = await User.findById(req.user.id).select("phone email");
+  const seller = await User.findById(req.user.id).select("phone email name");
   const product = await Product.create({
     ...data,
     phone: data.phone || seller.phone || "",
     email: data.email || seller.email || "",
+    contactName: seller.name || "",
+    showPhone: data.showPhone ?? true,
+    showEmail: data.showEmail ?? false,
     id: await L.nextProductId(),
     owner: req.user.id,
     status: L.MODERATE ? "pending" : "active",
@@ -194,10 +217,16 @@ pub.get("/listings/:id", optionalAuth, async (req, res) => {
   const seller = p.owner ? await User.findById(p.owner) : null;
   res.json({
     success: true,
-    listing: p,
+    listing: L.publicListing(p, { owner: !!isOwner }),
     isOwner: !!isOwner,
     seller: seller ? { ...publicProfile(seller), id: seller.id } : null,
   });
+});
+
+// GET /api/categories – category tree + per-category rules for the Post Ad form
+pub.get("/categories", (req, res) => {
+  res.set("Cache-Control", "public, max-age=3600");
+  res.json({ success: true, ...C.publicTree() });
 });
 
 // POST /api/listings/:id/view – bump view counter (client de-dupes per session)
@@ -217,7 +246,7 @@ pub.get("/sellers/:username", async (req, res) => {
   res.json({
     success: true,
     seller: publicProfile(user),
-    listings,
+    listings: listings.map((l) => L.publicListing(l)),
     ratings: ratings.map((r) => ({ id: r.id, stars: r.stars, comment: r.comment, createdAt: r.createdAt, rater: userCard(r.rater) })),
   });
 });

@@ -4,8 +4,9 @@ import { Link } from "react-router-dom";
 import { FaHeart, FaRegHeart } from "react-icons/fa";
 import { GoLocation } from "react-icons/go";
 import useFavorite from "../hooks/useFavorite";
+import { priceText } from "../api";
 
-const Item = ({ id, _id, name, images, new_price, old_price, address }) => {
+const Item = ({ id, _id, name, images, new_price, priceType, old_price, address }) => {
   const firstImage = Array.isArray(images) && images.length > 0 ? images[0] : "";
   const initialImage = typeof firstImage === "string" && firstImage !== "" ? firstImage : "/placeholder.jpg";
   const [imgSrc, setImgSrc] = useState(initialImage);
@@ -35,7 +36,7 @@ const Item = ({ id, _id, name, images, new_price, old_price, address }) => {
           </div>
         )}
         <div className="item-prices">
-          <span className="item-price-new">₦{Number(new_price).toLocaleString()}</span>
+          <span className="item-price-new">{priceText({ price: new_price, priceType })}</span>
           {old_price && <span className="item-price-old">₦{Number(old_price).toLocaleString()}</span>}
         </div>
       </div>

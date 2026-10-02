@@ -31,9 +31,10 @@ const saveCart = (userId, cart) => User.updateOne({ _id: userId }, { $set: { car
 
 // null if the listing can be added, otherwise a user-facing reason
 async function whyNotAddable(itemId, userId) {
-  const p = await Product.findOne({ $and: [{ id: itemId }, L.liveQuery()] }).select("owner");
+  const p = await Product.findOne({ $and: [{ id: itemId }, L.liveQuery()] }).select("owner priceType");
   if (!p) return "This listing is no longer available.";
   if (p.owner && String(p.owner) === String(userId)) return "You can't add your own listing to the cart.";
+  if (p.priceType === "contact") return "This listing has no fixed price. Message the seller to agree one.";
   return null;
 }
 
@@ -72,9 +73,10 @@ router.post("/merge", fetchUser, async (req, res) => {
   const cart = await getCart(req.user.id);
   const ids = Object.keys(incoming).map(Number);
   if (ids.length) {
-    const ok = await Product.find({ $and: [{ id: { $in: ids } }, L.liveQuery()] }).select("id owner");
+    const ok = await Product.find({ $and: [{ id: { $in: ids } }, L.liveQuery()] }).select("id owner priceType");
     for (const p of ok) {
       if (p.owner && String(p.owner) === String(req.user.id)) continue;
+      if (p.priceType === "contact") continue;
       if (!(p.id in cart) && Object.keys(cart).length >= MAX_LINES) continue;
       cart[p.id] = Math.max(cart[p.id] || 0, incoming[p.id]);
     }
@@ -104,7 +106,8 @@ router.post("/lookup", async (req, res) => {
     const available = liveIds.has(p.id) && !(o && o.status === "suspended");
     return {
       id: p.id, _id: String(p._id), title: p.title, price: p.price, image: p.images?.[0] || "", category: p.category,
-      city: p.city, region: p.region, phone: p.phone || seller?.business?.phone || "",
+      city: p.city, region: p.region, priceType: p.priceType || "fixed",
+      phone: (p.showPhone === false ? "" : p.phone) || seller?.business?.phone || "",
       available,
       seller: seller ? { id: seller.id, name: seller.name, username: seller.username, verified: seller.verified } : null,
     };

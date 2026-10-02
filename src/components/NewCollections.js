@@ -30,6 +30,7 @@ const NewCollections = () => {
             name={item.title || item.name}
             images={item.images}
             new_price={item.price || item.new_price}
+            priceType={item.priceType}
             old_price={item.old_price}
             address={item.address}
           />

@@ -9,6 +9,7 @@ export const categories = [
   "Garden & Outdoor",
   "Jobs",
   "Agriculture & Food",
+  "Business & Industrial",
   "Gadgets & Accessories",
   "Baby & Kids",
   "Misc & Others",

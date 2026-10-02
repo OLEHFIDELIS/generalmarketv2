@@ -30,6 +30,8 @@ export async function api(path, { method = "GET", body, form } = {}) {
 }
 
 export const money = (n) => "₦" + Number(n || 0).toLocaleString("en-NG");
+// Display price for a listing: honours "Free" / "Contact for price"
+export const priceText = (p) => (p?.priceType === "contact" ? "Contact for price" : p?.priceType === "free" ? "Free" : money(p?.price));
 export const dateShort = (d) => (d ? new Date(d).toLocaleDateString("en-NG", { day: "numeric", month: "short", year: "numeric" }) : "—");
 export const timeAgo = (d) => {
   if (!d) return "";

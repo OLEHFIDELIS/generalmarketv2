@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { FaHeart, FaTimes } from "react-icons/fa";
-import { api, money } from "../../api";
+import { api, priceText } from "../../api";
 import { Alert, Empty, PageHead, Spinner } from "../../components/dash/ui";
 
 export default function Favorites() {
@@ -32,7 +32,7 @@ export default function Favorites() {
                 <img src={p.images?.[0] || "/placeholder.jpg"} alt="" onError={(e) => { e.currentTarget.src = "/placeholder.jpg"; }} />
                 <div className="dx-lcard-body">
                   <div className="dx-lcard-title">{p.title}</div>
-                  <div className="dx-lcard-price">{money(p.price)}</div>
+                  <div className="dx-lcard-price">{priceText(p)}</div>
                   {p.unavailable && <div className="dx-hint">No longer available</div>}
                 </div>
               </Link>

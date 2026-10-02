@@ -180,7 +180,9 @@ const CartItems = () => {
                 <footer className="ct-order">
                   <div className="ct-order-total"><span>Subtotal</span><strong>{money(g.subtotal)}</strong></div>
                   <div className="ct-order-btns">
-                    <a className="ct-btn ct-btn-wa" href={wa} target="_blank" rel="noopener noreferrer"><FaWhatsapp /> Order on WhatsApp</a>
+                    {(g.phone || g.seller?.business?.phone || !g.seller) && (
+                      <a className="ct-btn ct-btn-wa" href={wa} target="_blank" rel="noopener noreferrer"><FaWhatsapp /> Order on WhatsApp</a>
+                    )}
                     {g.seller?.id && (
                       <button className="ct-btn ct-btn-ghost" disabled={busy === g.key} onClick={() => messageSeller(g)}>
                         <FaComments /> {busy === g.key ? "Sending…" : user ? "Message seller" : "Log in to message"}

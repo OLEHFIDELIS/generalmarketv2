@@ -244,6 +244,7 @@ const ShopCategory = ({ category }) => {
                   name={item.title}
                   images={item.images}
                   new_price={item.price}
+                  priceType={item.priceType}
                   address={item.address || item.city}
                 />
               ))}

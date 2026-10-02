@@ -8,7 +8,7 @@ import {
 import { Link, useNavigate } from "react-router-dom";
 import "./ProductDisplay.css";
 import "../pages/Dashboard/Dashboard.css";
-import { api, money } from "../api";
+import { api, money, priceText } from "../api";
 import { useAuth } from "../context/AuthContext";
 import useFavorite from "../hooks/useFavorite";
 import { ShopContext } from "../context/ShopContext";
@@ -52,6 +52,7 @@ export default function ProductDisplay({ product }) {
   }, [p._id]);
 
   const seller = detail?.seller;
+  const contactPhone = p.phone || seller?.business?.phone || "";
   const isOwner = !!detail?.isOwner;
   const canContactInApp = !!seller && !isOwner;
   const openPanel = (name) => {
@@ -226,6 +227,17 @@ export default function ProductDisplay({ product }) {
                 <p className="pd-desc-text">{p.description || "No description provided."}</p>
               </div>
 
+              {p.attributes?.length > 0 && (
+                <div className="pd-desc-card">
+                  <h3 className="pd-section-title">Details</h3>
+                  <dl className="pd-attrs">
+                    {p.attributes.map((a) => (
+                      <div key={a.key}><dt>{a.label}</dt><dd>{a.key === "deadline" ? new Date(a.value).toLocaleDateString("en-NG", { day: "numeric", month: "short", year: "numeric" }) : a.value}{a.unit ? ` ${a.unit}` : ""}</dd></div>
+                    ))}
+                  </dl>
+                </div>
+              )}
+
               <div className="pd-safety">
                 <div className="pd-safety-title"><FaShieldAlt /> Safety Tips</div>
                 <ul>
@@ -245,7 +257,7 @@ export default function ProductDisplay({ product }) {
                   {p.transaction && <span className="badge badge-tx">{p.transaction}</span>}
                 </div>
                 <h1 className="pd-title">{p.title}</h1>
-                <div className="pd-price">₦{Number(p.price || 0).toLocaleString()}</div>
+                <div className={`pd-price${p.priceType === "contact" ? " pd-price-note" : ""}`}>{priceText(p)}</div>
 
                 <div className="pd-meta-row">
                   {(p.city || p.region) && (
@@ -259,7 +271,11 @@ export default function ProductDisplay({ product }) {
                   )}
                 </div>
 
-                {!isOwner && (
+                {!isOwner && p.priceType === "contact" && (
+                  <div className="dx-alert dx-alert-info" style={{ marginTop: 12 }}>This seller hasn't set a fixed price. Message them or make an offer to agree one.</div>
+                )}
+
+                {!isOwner && p.priceType !== "contact" && (
                   <div className="pd-cart-box">
                     <button type="button" className="pd-cart-btn" onClick={onAddToCart} disabled={inCart >= maxQty}>
                       <FaShoppingCart /> {inCart ? `Add another (${inCart} in cart)` : "Add to cart"}
@@ -325,7 +341,7 @@ export default function ProductDisplay({ product }) {
                     {panel === "offer" && (
                       <div className="dx-field">
                         <label>Your offer (₦)</label>
-                        <input className="dx-input" type="number" min="1" required autoFocus value={form.amount} onChange={(e) => setForm({ ...form, amount: e.target.value })} placeholder={`Asking price ${money(p.price)}`} />
+                        <input className="dx-input" type="number" min="1" required autoFocus value={form.amount} onChange={(e) => setForm({ ...form, amount: e.target.value })} placeholder={p.priceType === "fixed" || !p.priceType ? `Asking price ${money(p.price)}` : "Your offer"} />
                       </div>
                     )}
                     <div className="dx-field">
@@ -339,20 +355,24 @@ export default function ProductDisplay({ product }) {
                   </form>
                 )}
 
-                <div className="seller-ctas">
-                  <a
-                    href={`https://wa.me/${(p.phone || seller?.business?.phone || "+2348141846896").replace(/\D/g, "")}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="cta-whatsapp"
-                  >
-                    <FaWhatsapp /> WhatsApp Seller
-                  </a>
-                  <button className="cta-phone" onClick={() => setPhoneRevealed(true)}>
-                    <FaPhoneAlt />
-                    {phoneRevealed ? (p.phone || "No number provided") : "Reveal Phone Number"}
-                  </button>
-                </div>
+                {(contactPhone || !seller) && (
+                  <div className="seller-ctas">
+                    <a
+                      href={`https://wa.me/${(contactPhone || "+2348141846896").replace(/\D/g, "")}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="cta-whatsapp"
+                    >
+                      <FaWhatsapp /> WhatsApp Seller
+                    </a>
+                    {p.phone && (
+                      <button className="cta-phone" onClick={() => setPhoneRevealed(true)}>
+                        <FaPhoneAlt />
+                        {phoneRevealed ? p.phone : "Reveal Phone Number"}
+                      </button>
+                    )}
+                  </div>
+                )}
 
                 {p.email && (
                   <div className="seller-email">
