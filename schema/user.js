@@ -102,6 +102,9 @@ const UserSchema = new Schema(
   }
 );
 
+// "N likes" on a listing = how many users have it in favorites
+UserSchema.index({ favorites: 1 });
+
 // Public company directory lookups
 UserSchema.index({ accountType: 1, "business.name": 1 });
 

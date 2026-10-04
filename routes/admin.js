@@ -16,6 +16,23 @@ router.get("/listings", async (req, res) => {
   res.json({ success: true, listings });
 });
 
+// ── Listing reports (from the "Report" button on a product page) ──────────
+router.get("/reports", async (req, res) => {
+  const Report = require("../schema/report");
+  const status = req.query.status === "resolved" ? "resolved" : "open";
+  const reports = await Report.find({ status }).sort({ createdAt: -1 }).limit(100)
+    .populate("listing", "id title status owner").populate("reporter", "name username");
+  res.json({ success: true, reports });
+});
+
+router.post("/reports/:id/resolve", async (req, res) => {
+  const Report = require("../schema/report");
+  if (!isId(req.params.id)) return res.status(400).json({ success: false, message: "Invalid id" });
+  const r = await Report.findByIdAndUpdate(req.params.id, { status: "resolved", resolvedAt: new Date() }, { new: true });
+  if (!r) return res.status(404).json({ success: false, message: "Report not found" });
+  res.json({ success: true, report: r });
+});
+
 router.post("/listings/:id/moderate", async (req, res) => {
   if (!isId(req.params.id)) return res.status(400).json({ success: false, message: "Invalid id" });
   const { action, reason } = req.body;

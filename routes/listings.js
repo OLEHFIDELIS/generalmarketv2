@@ -3,6 +3,10 @@ const mongoose = require("mongoose");
 const Product = require("../schema/product");
 const User = require("../schema/user");
 const Rating = require("../schema/rating");
+const Offer = require("../schema/offer");
+const Comment = require("../schema/comment");
+const Report = require("../schema/report");
+const rateLimit = require("../lib/rateLimit");
 const { fetchUser, optionalAuth } = require("../lib/auth");
 const { isId, publicProfile, userCard } = require("../lib/profile");
 const L = require("../lib/listings");
@@ -205,7 +209,8 @@ mine.delete("/:id", async (req, res) => {
 // ───────────────────────── Public: /api/listings, /api/sellers ─────────────
 const pub = express.Router();
 
-// GET /api/listings/:id  – by Mongo _id or numeric id. Includes the seller's public card.
+// GET /api/listings/:id  – by Mongo _id or numeric id. Includes the seller's public card + page extras
+// (likes, offers, comments, neighbouring listings) so the product page needs a single request.
 pub.get("/listings/:id", optionalAuth, async (req, res) => {
   const key = req.params.id;
   const p = isId(key) ? await Product.findById(key) : /^\d+$/.test(key) ? await Product.findOne({ id: Number(key) }) : null;
@@ -214,13 +219,87 @@ pub.get("/listings/:id", optionalAuth, async (req, res) => {
   const visible = !L.HIDDEN.includes(p.status || "active") && (!p.expiresAt || p.expiresAt > new Date());
   if (!visible && !isOwner && p.status !== "sold") return res.status(404).json({ success: false, message: "Listing not found" });
 
-  const seller = p.owner ? await User.findById(p.owner) : null;
+  const live = L.liveQuery();
+  const [seller, likes, offers, comments, prev, next, activeListings, likedByMe] = await Promise.all([
+    p.owner ? User.findById(p.owner) : null,
+    User.countDocuments({ favorites: p._id }),
+    Offer.countDocuments({ listing: p._id }),
+    Comment.countDocuments({ listing: p._id }),
+    Product.findOne({ $and: [live, { category: p.category, id: { $lt: p.id } }] }).sort({ id: -1 }).select("_id id title"),
+    Product.findOne({ $and: [live, { category: p.category, id: { $gt: p.id } }] }).sort({ id: 1 }).select("_id id title"),
+    p.owner ? Product.countDocuments({ owner: p.owner, ...live }) : 0,
+    req.user ? User.exists({ _id: req.user.id, favorites: p._id }) : null,
+  ]);
+  const nb = (x) => (x ? { _id: x._id, id: x.id, title: x.title } : null);
   res.json({
     success: true,
     listing: L.publicListing(p, { owner: !!isOwner }),
     isOwner: !!isOwner,
-    seller: seller ? { ...publicProfile(seller), id: seller.id } : null,
+    seller: seller ? { ...publicProfile(seller), id: seller.id, activeListings, lastActive: seller.lastLoginAt || null } : null,
+    stats: { likes, offers, comments, likedByMe: !!likedByMe },
+    neighbors: { prev: nb(prev), next: nb(next) },
   });
+});
+
+// ── Comments ──
+const cardOf = (u) => (u ? { name: u.name, username: u.username, avatar: u.avatar || "", verified: u.idVerification?.status === "verified" } : { name: "Deleted user", username: "", avatar: "", verified: false });
+
+// GET /api/listings/:id/comments
+pub.get("/listings/:id/comments", optionalAuth, async (req, res) => {
+  if (!isId(req.params.id)) return res.status(400).json({ success: false, message: "Invalid listing." });
+  const p = await Product.findById(req.params.id).select("owner");
+  if (!p) return res.status(404).json({ success: false, message: "Listing not found" });
+  const rows = await Comment.find({ listing: p._id }).sort({ createdAt: -1 }).limit(50).populate("user", "name username avatar idVerification.status");
+  const me = req.user?.id, admin = req.user?.role === "admin", owner = me && p.owner && String(p.owner) === me;
+  res.json({
+    success: true,
+    comments: rows.map((c) => ({ id: c.id, text: c.text, createdAt: c.createdAt, user: cardOf(c.user), canDelete: !!me && (admin || owner || String(c.user?._id) === me) })),
+  });
+});
+
+// POST /api/listings/:id/comments { text }
+pub.post("/listings/:id/comments", rateLimit({ windowMs: 60 * 60 * 1000, max: 15, message: "You're commenting too fast. Please try again later." }), fetchUser, async (req, res) => {
+  if (!isId(req.params.id)) return res.status(400).json({ success: false, message: "Invalid listing." });
+  const text = String(req.body.text || "").trim();
+  if (text.length < 2) return res.status(400).json({ success: false, message: "Write at least 2 characters." });
+  if (text.length > 600) return res.status(400).json({ success: false, message: "Comments can be up to 600 characters." });
+  const p = await Product.findById(req.params.id).select("_id status expiresAt");
+  if (!p || L.HIDDEN.includes(p.status || "active")) return res.status(404).json({ success: false, message: "Listing not found" });
+  const c = await Comment.create({ listing: p._id, user: req.user.id, text });
+  res.status(201).json({
+    success: true,
+    comment: { id: c.id, text: c.text, createdAt: c.createdAt, canDelete: true, user: cardOf(await User.findById(req.user.id).select("name username avatar idVerification.status")) },
+  });
+});
+
+// DELETE /api/comments/:cid  – author, the listing's owner, or an admin
+pub.delete("/comments/:cid", fetchUser, async (req, res) => {
+  if (!isId(req.params.cid)) return res.status(400).json({ success: false, message: "Invalid comment." });
+  const c = await Comment.findById(req.params.cid);
+  if (!c) return res.status(404).json({ success: false, message: "Comment not found" });
+  const p = await Product.findById(c.listing).select("owner");
+  const allowed = req.user.role === "admin" || String(c.user) === req.user.id || (p?.owner && String(p.owner) === req.user.id);
+  if (!allowed) return res.status(403).json({ success: false, message: "You can't delete this comment." });
+  await c.deleteOne();
+  res.json({ success: true });
+});
+
+// ── Report listing ──
+// POST /api/listings/:id/report { reason, details? }   (guests allowed, rate-limited)
+pub.post("/listings/:id/report", rateLimit({ windowMs: 60 * 60 * 1000, max: 10, message: "Too many reports. Please try again later." }), optionalAuth, async (req, res) => {
+  if (!isId(req.params.id)) return res.status(400).json({ success: false, message: "Invalid listing." });
+  const reason = String(req.body.reason || "").toLowerCase();
+  if (!Report.REASONS.includes(reason)) return res.status(400).json({ success: false, message: "Choose a reason for the report." });
+  const p = await Product.findById(req.params.id).select("_id owner");
+  if (!p) return res.status(404).json({ success: false, message: "Listing not found" });
+  if (req.user && p.owner && String(p.owner) === req.user.id) return res.status(400).json({ success: false, message: "You can't report your own listing." });
+  try {
+    await Report.create({ listing: p._id, reporter: req.user?.id, ip: req.ip, reason, details: String(req.body.details || "").trim().slice(0, 500) });
+  } catch (e) {
+    if (e.code === 11000) return res.status(409).json({ success: false, message: "You've already reported this listing. Thanks — we're looking into it." });
+    throw e;
+  }
+  res.status(201).json({ success: true, message: "Thanks for helping us keep GeneralMarket safe." });
 });
 
 // GET /api/categories – category tree + per-category rules for the Post Ad form
