@@ -184,6 +184,9 @@ const CartItems = () => {
                       <a className="ct-btn ct-btn-wa" href={wa} target="_blank" rel="noopener noreferrer"><FaWhatsapp /> Order on WhatsApp</a>
                     )}
                     {g.seller?.id && (
+                      <Link className="ct-btn ct-btn-primary" to={`/checkout/cart/${g.seller.id}`}><FaShieldAlt /> Pay securely (escrow)</Link>
+                    )}
+                    {g.seller?.id && (
                       <button className="ct-btn ct-btn-ghost" disabled={busy === g.key} onClick={() => messageSeller(g)}>
                         <FaComments /> {busy === g.key ? "Sending…" : user ? "Message seller" : "Log in to message"}
                       </button>

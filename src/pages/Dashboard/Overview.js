@@ -73,7 +73,7 @@ export default function Overview() {
         <Card to="/dashboard/verification" icon={<FaIdCard />} tone={vs === "verified" ? "green" : "blue"} title="ID verification" desc={VERIFY_TEXT[vs]} />
         <Card to="/dashboard/referrals" icon={<FaGift />} tone="violet" title="My referrals" desc="Invite friends to GeneralMarket with your link" />
         <Card to="/dashboard/promotions" icon={<FaBullhorn />} tone="orange" title="Promotions" desc="Highlight listings, buy credits or membership" />
-        <Card to="/dashboard/escrow" icon={<FaLock />} tone="slate" title="Escrow" desc="Protected payments between buyer and seller" />
+        <Card to="/dashboard/escrow" icon={<FaLock />} count={c.escrowTodo} alert tone="green" title="Escrow" desc="Pay and get paid safely. Orders, payouts and your bank account" />
         <Card to="/contact" icon={<FaHeadset />} tone="cyan" title="Contact us" desc="Feel free to send us a message" />
         <Card onClick={logout} icon={<FaSignOutAlt />} tone="slate" title="Logout" desc="Sign out from your account" />
       </div>

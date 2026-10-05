@@ -29,7 +29,8 @@
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
-    "migrate": "node scripts/migrate.js"
+    "migrate": "node scripts/migrate.js",
+    "test:escrow": "node scripts/test-escrow.js"
   },
   "eslintConfig": {
     "extends": [
@@ -51,4 +52,3 @@
   },
   "homepage": "."
 }
-

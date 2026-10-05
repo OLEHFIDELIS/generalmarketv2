@@ -2,8 +2,7 @@ import React, { useCallback, useContext, useEffect, useState } from "react";
 import { NavLink, Navigate, Outlet, useLocation, useMatch } from "react-router-dom";
 import {
   FaTachometerAlt, FaList, FaPlusCircle, FaEnvelope, FaGavel, FaHeart, FaBell, FaStar, FaUser, FaBriefcase,
-  FaIdCard, FaGift, FaBullhorn, FaLock, FaShoppingCart, FaSignOutAlt, FaExternalLinkAlt,
-} from "react-icons/fa";
+  FaIdCard, FaGift, FaBullhorn, FaLock, FaShoppingCart, FaSignOutAlt, FaExternalLinkAlt, FaChartLine } from "react-icons/fa";
 import "./User.css";
 import "./Dashboard.css";
 import { api } from "../../api";
@@ -48,7 +47,8 @@ export default function DashboardLayout() {
     { to: "/dashboard/verification", label: "ID verification", icon: <FaIdCard /> },
     { to: "/dashboard/referrals", label: "Referrals", icon: <FaGift /> },
     { to: "/dashboard/promotions", label: "Promotions", icon: <FaBullhorn /> },
-    { to: "/dashboard/escrow", label: "Escrow", icon: <FaLock /> },
+    { to: "/dashboard/escrow", label: "Escrow", icon: <FaLock />, badge: c.escrowTodo, alert: true },
+    ...(user.role === "admin" ? [{ to: "/dashboard/finance", label: "Finance (admin)", icon: <FaChartLine /> }] : []),
   ];
 
   return (

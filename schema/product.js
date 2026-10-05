@@ -76,6 +76,9 @@ const ProductSchema = new mongoose.Schema({
     soldAt: Date,
     rejectionReason: String,
     views: { type: Number, default: 0 },
+    // Escrow: set while a buyer is paying or the money is held, so two buyers can't pay for the same item
+    reservedBy: { type: mongoose.Schema.Types.ObjectId, ref: "Order", default: null },
+    reservedUntil: { type: Date, default: null },
 
     // ── Post Ad form (dynamic categories / price options / contact visibility) ──
     // category (above) stays the lowercase top-level name; categoryPath is the full path of display labels.

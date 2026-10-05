@@ -21,7 +21,11 @@ import Profile from './pages/Dashboard/Profile';
 import BusinessProfile from './pages/Dashboard/BusinessProfile';
 import Verification from './pages/Dashboard/Verification';
 import Referrals from './pages/Dashboard/Referrals';
-import { Promotions, Escrow } from './pages/Dashboard/ComingSoon';
+import { Promotions } from './pages/Dashboard/ComingSoon';
+import Escrow from './pages/Dashboard/Escrow';
+import EscrowOrder from './pages/Dashboard/EscrowOrder';
+import Finance from './pages/Dashboard/Finance';
+import Checkout from './pages/Checkout';
 import SellerProfile from './pages/SellerProfile';
 import Companies from './pages/Companies';
 import Contact from './pages/Contact';
@@ -63,6 +67,8 @@ function App() {
               <Route path="/all" element={<AllListings />} />
               <Route path="/search" element={<AllListings />} />
               <Route path="/seller/:username" element={<SellerProfile />} />
+              <Route path="/checkout/cart/:sellerId" element={<Checkout />} />
+              <Route path="/checkout/:listingId" element={<Checkout />} />
               <Route path="/companies" element={<Companies />} />
               <Route path="/contact" element={<Contact />} />
 
@@ -84,6 +90,8 @@ function App() {
                 <Route path="referrals" element={<Referrals />} />
                 <Route path="promotions" element={<Promotions />} />
                 <Route path="escrow" element={<Escrow />} />
+                <Route path="escrow/:id" element={<EscrowOrder />} />
+                <Route path="finance" element={<Finance />} />
               </Route>
             </Routes>
             <Footer />

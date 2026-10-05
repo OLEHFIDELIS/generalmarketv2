@@ -81,6 +81,17 @@ const UserSchema = new Schema(
       alerts: { type: Boolean, default: true },
     },
 
+    // ── Seller payout account (escrow payouts). The full account number is NOT stored: only the
+    //    last 4 digits for display; Paystack keeps the account behind `recipientCode`.
+    payout: {
+      bankCode: String,
+      bankName: String,
+      accountLast4: String,
+      accountName: String,
+      recipientCode: String,
+      verifiedAt: Date,
+    },
+
     // ── Referrals ───────────────────────────────────────────────────────────
     referral: {
       code: { type: String, uppercase: true, unique: true, sparse: true },

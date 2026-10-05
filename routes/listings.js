@@ -211,6 +211,22 @@ const pub = express.Router();
 
 // GET /api/listings/:id  – by Mongo _id or numeric id. Includes the seller's public card + page extras
 // (likes, offers, comments, neighbouring listings) so the product page needs a single request.
+// Can this listing be bought with escrow right now? (the page only shows the button when available)
+const ps = require("../lib/paystack");
+const feeCfg = require("../lib/fees");
+function escrowInfo(p, seller, viewer, isOwner) {
+  const no = (reason) => ({ available: false, reason });
+  if (!ps.enabled()) return no("off");
+  if (isOwner) return no("own");
+  if (!seller || !seller.payout?.recipientCode) return no("seller_no_payout");
+  if (p.status && p.status !== "active") return no("not_active");
+  if ((p.priceType || "fixed") !== "fixed" || !(p.price > 0)) return no("no_price");
+  const kobo = Math.round(p.price * 100), c = feeCfg.config();
+  if (kobo < c.minOrder || kobo > c.maxOrder) return no("amount");
+  if (p.reservedUntil && p.reservedUntil > new Date()) return no("reserved");
+  return { available: true, mode: ps.mode() };
+}
+
 pub.get("/listings/:id", optionalAuth, async (req, res) => {
   const key = req.params.id;
   const p = isId(key) ? await Product.findById(key) : /^\d+$/.test(key) ? await Product.findOne({ id: Number(key) }) : null;
@@ -236,6 +252,7 @@ pub.get("/listings/:id", optionalAuth, async (req, res) => {
     listing: L.publicListing(p, { owner: !!isOwner }),
     isOwner: !!isOwner,
     seller: seller ? { ...publicProfile(seller), id: seller.id, activeListings, lastActive: seller.lastLoginAt || null } : null,
+    escrow: escrowInfo(p, seller, req.user, isOwner),
     stats: { likes, offers, comments, likedByMe: !!likedByMe },
     neighbors: { prev: nb(prev), next: nb(next) },
   });

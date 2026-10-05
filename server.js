@@ -22,7 +22,8 @@ app.set("trust proxy", 1);
 // CORS + body parsing
 // --------------------------------------------------
 app.use(cors({ origin: "*", credentials: true }));
-app.use(express.json());
+// Keep the exact raw bytes of webhook requests: Paystack's signature is calculated over them.
+app.use(express.json({ verify: (req, res, buf) => { if (req.originalUrl.startsWith("/api/payments/webhook")) req.rawBody = buf; } }));
 app.use(express.urlencoded({ extended: true }));
 app.use("/images", express.static("uploads/images"));
 
@@ -31,7 +32,15 @@ app.use("/images", express.static("uploads/images"));
 // --------------------------------------------------
 mongoose
   .connect(mongoUri())
-  .then(() => console.log("✅ MongoDB Connected"))
+  .then(() => {
+    console.log("✅ MongoDB Connected");
+    // Escrow housekeeping: expire unpaid orders, auto-release, auto-refund, retry payouts (safe to run on several servers)
+    const escrow = require("./lib/escrow");
+    const tick = () => escrow.runMaintenance().catch((e) => console.error("escrow job:", e.message));
+    setTimeout(tick, 30 * 1000).unref();
+    setInterval(tick, 5 * 60 * 1000).unref();
+    console.log(`💳 Payments mode: ${require("./lib/paystack").mode()}`);
+  })
   .catch((err) => console.error("❌ MongoDB error:", err.message));
 
 // --------------------------------------------------
@@ -50,6 +59,10 @@ app.use("/api", require("./routes/offers"));                   // /offers, /me/o
 app.use("/api", require("./routes/ratings"));                  // /ratings, /me/ratings
 app.use("/api", listingRoutes.pub);                            // /listings/:id, /sellers/:username, /companies
 app.use("/api/admin", require("./routes/admin"));
+
+// Escrow + payments (Paystack)
+app.use("/api/payments", require("./routes/payments"));
+app.use("/api/orders", require("./routes/orders"));
 
 // Cart: new /api/cart/* API plus the old /addtocart, /removefromcart, /getcart paths (validated)
 const cartRoutes = require("./routes/cart");

@@ -84,3 +84,5 @@ export const spanSince = (d) => {
   if (days < 730) { const m = Math.floor(days / 30); return `${m} ${m === 1 ? "month" : "months"}`; }
   const y = Math.floor(days / 365); return `${y} ${y === 1 ? "year" : "years"}`;
 };
+// Escrow amounts come from the server in kobo (₦1 = 100 kobo)
+export const kobo = (k) => "₦" + (Number(k || 0) / 100).toLocaleString("en-NG", { maximumFractionDigits: 2 });

@@ -31,7 +31,7 @@ const NOTICE = {
 
 // Product / listing page. All data comes from GET /api/listings/:id (see pages/Product.js).
 export default function ProductDisplay({ data }) {
-  const { listing: p, seller, isOwner = false, stats = {}, neighbors = {} } = data || {};
+  const { listing: p, seller, isOwner = false, stats = {}, neighbors = {}, escrow } = data || {};
   const navigate = useNavigate();
   const { pathname } = useLocation();
   const { user } = useAuth();
@@ -161,6 +161,13 @@ export default function ProductDisplay({ data }) {
         <div className="pv-notice">{NOTICE[status] || "This ad isn't available right now."}</div>
       ) : (
         <>
+          {live && !isOwner && escrow?.available && (
+            <>
+              <Link className="pv-btn escrow block" to={`/checkout/${p._id}`}><FaShieldAlt /> Buy with escrow</Link>
+              <div className="pv-escrow-note">Your money is held safely and only released to the seller when you confirm you got the item.</div>
+            </>
+          )}
+          {live && !isOwner && escrow?.reason === "reserved" && <div className="pv-notice">Another buyer is paying for this item right now. Check back soon.</div>}
           {canMessage && <button type="button" className="pv-btn msg block" onClick={() => open("message")}><FaComments /> Message seller</button>}
           {canOffer && <button type="button" className="pv-btn block" onClick={() => open("offer")}><FaGavel /> Make price offer</button>}
           {phone && (
@@ -326,6 +333,7 @@ export default function ProductDisplay({ data }) {
           {phone && <a href={`sms:${phone}`} className="pv-sticky-btn"><FaSms /><span>SMS</span></a>}
           {phone && !seller && <a href={`https://wa.me/${waNumber(phone)}?text=${waText}`} className="pv-sticky-btn wa" target="_blank" rel="noopener noreferrer"><FaWhatsapp /><span>WhatsApp</span></a>}
           <button type="button" className="pv-sticky-btn" onClick={share}><FaShareAlt /><span>Share</span></button>
+          {live && escrow?.available && <Link className="pv-btn escrow" to={`/checkout/${p._id}`}><FaShieldAlt /> Buy safely</Link>}
           {canMessage && <button type="button" className="pv-btn msg" onClick={() => open("message")}><FaComments /> Message seller</button>}
         </div>
       )}

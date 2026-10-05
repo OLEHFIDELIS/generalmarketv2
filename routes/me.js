@@ -5,6 +5,7 @@ const User = require("../schema/user");
 const Product = require("../schema/product");
 const SavedSearch = require("../schema/savedSearch");
 const Message = require("../schema/message");
+const Order = require("../schema/order");
 const Offer = require("../schema/offer");
 const cloudinary = require("../cloudinary");
 const { fetchUser } = require("../lib/auth");
@@ -151,12 +152,14 @@ router.post("/password", async (req, res) => {
 router.get("/dashboard", async (req, res) => {
   const uid = req.user.id;
   await expireStale(uid);
-  const [user, statusAgg, alerts, unread, offersPending] = await Promise.all([
+  const [user, statusAgg, alerts, unread, offersPending, escrowShip, escrowConfirm] = await Promise.all([
     User.findById(uid),
     Product.aggregate([{ $match: { owner: new mongoose.Types.ObjectId(uid) } }, { $group: { _id: "$status", n: { $sum: 1 } } }]),
     SavedSearch.countDocuments({ user: uid }),
     Message.countDocuments({ to: uid, readAt: null }),
     Offer.countDocuments({ seller: uid, status: "pending" }),
+    Order.countDocuments({ seller: uid, status: "paid" }),
+    Order.countDocuments({ buyer: uid, status: "delivered" }),
   ]);
   const by = Object.fromEntries(statusAgg.map((s) => [s._id, s.n]));
   res.json({
@@ -172,6 +175,7 @@ router.get("/dashboard", async (req, res) => {
       favorites: user.favorites.length,
       unreadMessages: unread,
       pendingOffers: offersPending,
+      escrowTodo: escrowShip + escrowConfirm,
     },
   });
 });

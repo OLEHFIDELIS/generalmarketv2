@@ -5,6 +5,8 @@ const cloudinary = require("../cloudinary");
 const { fetchUser, requireAdmin } = require("../lib/auth");
 const { isId, userCard } = require("../lib/profile");
 const L = require("../lib/listings");
+const Order = require("../schema/order");
+const E = require("../lib/escrow");
 
 const router = express.Router();
 router.use(fetchUser, requireAdmin);
@@ -88,5 +90,48 @@ router.post("/users/:userId/suspend", async (req, res) => {
   if (!u) return res.status(404).json({ success: false, message: "User not found" });
   res.json({ success: true, status: u.status });
 });
+
+
+// ── Escrow / finance (admin only: the whole router is behind requireAdmin) ──────────────────────
+const asyncRoute = (fn) => (req, res, next) => fn(req, res, next).catch((e) => (e instanceof E.EscrowError ? res.status(e.status).json({ success: false, message: e.message }) : next(e)));
+const adminView = (o, req) => E.view(o, req.user);
+
+router.get("/finance", asyncRoute(async (req, res) => {
+  const days = Math.min(365, Math.max(1, parseInt(req.query.days) || 30));
+  res.json({ success: true, summary: await E.financeSummary(days) });
+}));
+
+router.get("/orders", asyncRoute(async (req, res) => {
+  const filter = {};
+  if (req.query.status) filter.status = String(req.query.status);
+  if (req.query.attention === "1") filter.$or = [{ status: { $in: ["disputed", "review"] } }, { status: "completed", "payout.status": { $in: ["failed", "processing"] } }, { "refund.status": "failed" }];
+  if (req.query.q) filter.orderNo = new RegExp("^" + String(req.query.q).replace(/[^\w]/g, ""), "i");
+  const rows = await Order.find(filter).sort({ createdAt: -1 }).limit(100);
+  res.json({ success: true, orders: await Promise.all(rows.map((o) => adminView(o, req))) });
+}));
+
+router.get("/orders/:id", asyncRoute(async (req, res) => {
+  if (!isId(req.params.id)) return res.status(404).json({ success: false, message: "Order not found" });
+  const o = await Order.findById(req.params.id);
+  if (!o) return res.status(404).json({ success: false, message: "Order not found" });
+  res.json({ success: true, order: await adminView(o, req) });
+}));
+
+router.post("/orders/:id/resolve", asyncRoute(async (req, res) => {
+  const o = await E.resolveDispute(req.params.id, req.user.id, req.body.decision, req.body.note);
+  res.json({ success: true, order: await adminView(o, req) });
+}));
+router.post("/orders/:id/retry-payout", asyncRoute(async (req, res) => {
+  const o = await E.release(req.params.id);
+  res.json({ success: true, order: await adminView(o, req) });
+}));
+router.post("/orders/:id/sync-payout", asyncRoute(async (req, res) => {
+  const o = await E.syncPayout(req.params.id);
+  res.json({ success: true, order: await adminView(o, req) });
+}));
+router.post("/orders/:id/retry-refund", asyncRoute(async (req, res) => {
+  const o = await E.refundOrder(req.params.id, "Refund retried by admin", req.user.id, "admin");
+  res.json({ success: true, order: await adminView(o, req) });
+}));
 
 module.exports = router;
