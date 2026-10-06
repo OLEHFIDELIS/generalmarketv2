@@ -25,9 +25,7 @@ const Footer = () => {
             <p>Post your free ad today and reach thousands of buyers across Nigeria.</p>
           </div>
           <a
-            href="https://wa.me/+2348141846896"
-            target="_blank"
-            rel="noopener noreferrer"
+            href="/#/dashboard/post"
             className="footer-cta-btn"
           >
             Post a Free Ad <FaArrowRight />
@@ -90,7 +88,7 @@ const Footer = () => {
               <li><a href="/#/all">All Listings</a></li>
               <li><a href="/#/login">Login / Register</a></li>
               <li><a href="/#/cart">My Cart</a></li>
-              <li><a href="https://wa.me/+2348141846896" target="_blank" rel="noopener noreferrer">Post a Free Ad</a></li>
+              <li><a href="/#/dashboard/post">Post a Free Ad</a></li>
             </ul>
           </div>
 

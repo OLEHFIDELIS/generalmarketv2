@@ -224,11 +224,9 @@ const ShopCategory = ({ category }) => {
             <h3>No listings in {catLabel} yet</h3>
             <p>Be the first to post in this category</p>
             <a
-              href="https://wa.me/+2348141846896"
-              target="_blank"
-              rel="noopener noreferrer"
+              href="/#/dashboard/post"
               className="sc-post-btn"
-              style={{ background: meta.color }}
+              style={{ background: meta.color, color: "#fff" }}
             >
               + Post a free ad
             </a>
